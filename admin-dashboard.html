@@ -1,0 +1,2073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cake Shop Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .dashboard-card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+        }
+        .order-form-container {
+            display: none;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .customer-search-results {
+            display: none;
+            position: absolute;
+            background-color: white;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            border: 1px solid #ddd;
+            border-radius: 0 0 5px 5px;
+        }
+        .customer-search-item {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+        .customer-search-item:hover {
+            background-color: #f1f1f1;
+        }
+        #map {
+            height: 200px;
+            width: 100%;
+            margin-top: 10px;
+            display: none;
+            border-radius: 5px;
+        }
+        .rider-badge {
+            background-color: #e3f2fd;
+            color: #1976d2;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+        .toppings-checkbox {
+            margin-right: 8px;
+        }
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .badge-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .badge-preparing {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        .badge-ready {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .badge-delivery {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .badge-delivered {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .badge-cancelled {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .rider-status-online {
+            color: green;
+            margin-right: 5px;
+        }
+        .rider-status-offline {
+            color: red;
+            margin-right: 5px;
+        }
+        .rider-card {
+            border-left: 4px solid #4e73df;
+            transition: all 0.3s;
+        }
+        .rider-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .rider-status-badge {
+            display: inline-block;
+            padding: 0.35em 0.65em;
+            border-radius: 0.25rem;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+        .rider-online {
+            background-color: #1cc88a;
+            color: white;
+        }
+        .rider-offline {
+            background-color: #e74a3b;
+            color: white;
+        }
+        .sidebar {
+            background-color: #343a40;
+            color: white;
+            height: 100vh;
+            position: fixed;
+            width: 250px;
+            padding-top: 20px;
+        }
+        .sidebar a {
+            color: white;
+            padding: 10px 15px;
+            display: block;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .sidebar a:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        .sidebar a.active {
+            background-color: #4e73df;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        .user-search-container {
+            position: relative;
+        }
+        .user-search-results {
+            display: none;
+            position: absolute;
+            background-color: white;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            border: 1px solid #ddd;
+            border-radius: 0 0 5px 5px;
+        }
+        .user-search-item {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+        .user-search-item:hover {
+            background-color: #f1f1f1;
+        }
+        /* Password change form styles */
+        .password-form {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .password-form .form-group {
+            margin-bottom: 20px;
+        }
+        .password-form label {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .password-form .btn-primary {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+        }
+        .password-form .alert {
+            margin-top: 20px;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            top: 12px;
+            cursor: pointer;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" id="dashboardLink">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="manageRidersLink">
+                                <i class="fas fa-motorcycle me-2"></i>Manage Riders
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="settingsLink">
+                                <i class="fas fa-cog me-2"></i>Settings
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4 main-content">
+                <!-- Dashboard Content -->
+                <div id="dashboardContent">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Admin Dashboard</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button id="logout-btn" class="btn btn-outline-danger">
+                                <i class="fas fa-sign-out-alt me-1"></i> Logout
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card dashboard-card bg-primary text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Today's Orders</h5>
+                                    <h2 id="today-orders-count" class="card-text">0</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card dashboard-card bg-success text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Revenue</h5>
+                                    <h2 id="revenue-amount" class="card-text">$0.00</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card dashboard-card bg-warning text-dark">
+                                <div class="card-body">
+                                    <h5 class="card-title">Pending Orders</h5>
+                                    <h2 id="pending-orders-count" class="card-text">0</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card dashboard-card bg-info text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Active Riders</h5>
+                                    <h2 id="active-riders-count" class="card-text">0</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card mb-4">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Order Management</h5>
+                                    <div>
+                                        <button id="new-order-btn" class="btn btn-primary me-2">
+                                            <i class="fas fa-plus me-1"></i> New Order
+                                        </button>
+                                        <button id="refresh-orders-btn" class="btn btn-outline-secondary">
+                                            <i class="fas fa-sync-alt me-1"></i> Refresh
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div id="order-form-container" class="order-form-container">
+                                        <h5>Create New Order</h5>
+                                        <form id="order-form">
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <label for="customer-search" class="form-label">Customer Email</label>
+                                                    <input type="text" class="form-control" id="customer-search" placeholder="Search customer by email">
+                                                    <div id="customer-search-results" class="customer-search-results"></div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="customer-name" class="form-label">Customer Name</label>
+                                                    <input type="text" class="form-control" id="customer-name" placeholder="Customer name">
+                                                </div>
+                                            </div>
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <label for="customer-phone" class="form-label">Customer Phone</label>
+                                                    <input type="tel" class="form-control" id="customer-phone" placeholder="Customer phone">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label id="date-time-label" class="form-label">Pickup Date</label>
+                                                    <input type="datetime-local" class="form-control" id="order-date-time">
+                                                </div>
+                                            </div>
+                                            
+                                            <div id="delivery-address-container" class="mb-3" style="display: none;">
+                                                <label for="delivery-address" class="form-label">Delivery Address</label>
+                                                <input type="text" class="form-control" id="delivery-address" placeholder="Enter delivery address">
+                                                <div id="map"></div>
+                                            </div>
+                                            
+                                            <div id="rider-select-container" class="mb-3" style="display: none;">
+                                                <label for="rider-select" class="form-label">Assign Rider</label>
+                                                <select class="form-select" id="rider-select">
+                                                    <option value="">-- Select Rider --</option>
+                                                </select>
+                                                <div id="selected-rider-info" class="mt-2 p-2 bg-light rounded" style="display: none;">
+                                                    <p class="mb-1"><strong>Name:</strong> <span id="selected-rider-name"></span></p>
+                                                    <p class="mb-1"><strong>Phone:</strong> <span id="selected-rider-phone"></span></p>
+                                                    <p class="mb-1"><strong>Vehicle:</strong> <span id="selected-rider-vehicle"></span></p>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Delivery Method</label>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="delivery-method" id="delivery-pickup" value="pickup" checked>
+                                                        <label class="form-check-label" for="delivery-pickup">
+                                                            Customer Pickup
+                                                        </label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="delivery-method" id="delivery-rider" value="rider">
+                                                        <label class="form-check-label" for="delivery-rider">
+                                                            Rider Delivery
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="cake-type" class="form-label">Cake Type</label>
+                                                    <select class="form-select" id="cake-type">
+                                                        <option value="">-- Select Cake Type --</option>
+                                                        <option value="Round Cake">Round Cake</option>
+                                                        <option value="Sheet Cake">Sheet Cake</option>
+                                                        <option value="Cupcakes">Cupcakes</option>
+                                                        <option value="Cheesecake">Cheesecake</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <label for="cake-size" class="form-label">Cake Size</label>
+                                                    <select class="form-select" id="cake-size">
+                                                        <option value="">-- Select Size --</option>
+                                                        <optgroup label="Round Cakes">
+                                                            <option value="6-inch">6-inch</option>
+                                                            <option value="8-inch">8-inch</option>
+                                                            <option value="10-inch">10-inch</option>
+                                                            <option value="12-inch">12-inch</option>
+                                                        </optgroup>
+                                                        <optgroup label="Sheet Cakes">
+                                                            <option value="quarter-sheet">Quarter Sheet</option>
+                                                            <option value="half-sheet">Half Sheet</option>
+                                                        </optgroup>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Flavor</label>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="flavor" id="flavor-vanilla" value="Vanilla">
+                                                        <label class="form-check-label" for="flavor-vanilla">Vanilla</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="flavor" id="flavor-chocolate" value="Chocolate">
+                                                        <label class="form-check-label" for="flavor-chocolate">Chocolate</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="flavor" id="flavor-red-velvet" value="Red Velvet">
+                                                        <label class="form-check-label" for="flavor-red-velvet">Red Velvet</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <label for="frosting-type" class="form-label">Frosting Type</label>
+                                                    <select class="form-select" id="frosting-type">
+                                                        <option value="">-- Select Frosting --</option>
+                                                        <option value="Buttercream">Buttercream</option>
+                                                        <option value="Fondant">Fondant</option>
+                                                        <option value="Cream Cheese">Cream Cheese</option>
+                                                        <option value="Whipped Cream">Whipped Cream</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Toppings ($2.00 each)</label>
+                                                    <div class="row">
+                                                        <div class="col-6">
+                                                            <div class="form-check">
+                                                                <input class="form-check-input toppings-checkbox" type="checkbox" name="toppings" id="topping-fruits" value="Fresh Fruits">
+                                                                <label class="form-check-label" for="topping-fruits">Fresh Fruits</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input toppings-checkbox" type="checkbox" name="toppings" id="topping-nuts" value="Nuts">
+                                                                <label class="form-check-label" for="topping-nuts">Nuts</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input toppings-checkbox" type="checkbox" name="toppings" id="topping-sprinkles" value="Sprinkles">
+                                                                <label class="form-check-label" for="topping-sprinkles">Sprinkles</label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <div class="form-check">
+                                                                <input class="form-check-input toppings-checkbox" type="checkbox" name="toppings" id="topping-chocolate" value="Chocolate Chips">
+                                                                <label class="form-check-label" for="topping-chocolate">Chocolate Chips</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input toppings-checkbox" type="checkbox" name="toppings" id="topping-caramel" value="Caramel Drizzle">
+                                                                <label class="form-check-label" for="topping-caramel">Caramel Drizzle</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input toppings-checkbox" type="checkbox" name="toppings" id="topping-whipped" value="Whipped Cream">
+                                                                <label class="form-check-label" for="topping-whipped">Whipped Cream</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label for="special-requests" class="form-label">Special Requests</label>
+                                                <textarea class="form-control" id="special-requests" rows="3" placeholder="Any special instructions..."></textarea>
+                                            </div>
+                                            
+                                            <div class="card mb-3">
+                                                <div class="card-header">
+                                                    <h6 class="mb-0">Order Summary</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="row">
+                                                        <div class="col-6">
+                                                            <p class="mb-1">Base Price:</p>
+                                                            <p class="mb-1">Toppings:</p>
+                                                            <p class="mb-1">Delivery Fee:</p>
+                                                            <p class="mb-1">Tax (8%):</p>
+                                                            <p class="mb-1 fw-bold">Total:</p>
+                                                        </div>
+                                                        <div class="col-6 text-end">
+                                                            <p class="mb-1" id="base-price">$0.00</p>
+                                                            <p class="mb-1" id="toppings-price">$0.00</p>
+                                                            <p class="mb-1" id="delivery-fee">$0.00</p>
+                                                            <p class="mb-1" id="tax-amount">$0.00</p>
+                                                            <p class="mb-1 fw-bold" id="total-price">$0.00</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="d-flex justify-content-end">
+                                                <button type="button" id="cancel-order-btn" class="btn btn-outline-secondary me-2">
+                                                    <i class="fas fa-times me-1"></i> Cancel
+                                                </button>
+                                                <button type="button" id="submit-order-btn" class="btn btn-primary">
+                                                    <i class="fas fa-check me-1"></i> Submit Order
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Order #</th>
+                                                    <th>Customer</th>
+                                                    <th>Items</th>
+                                                    <th>Total</th>
+                                                    <th>Date/Time</th>
+                                                    <th>Status</th>
+                                                    <th>Method</th>
+                                                    <th>Rider</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="orders-table-body">
+                                                <tr id="orders-loading">
+                                                    <td colspan="9" class="text-center">
+                                                        <div class="spinner-border text-primary" role="status">
+                                                            <span class="visually-hidden">Loading...</span>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manage Riders Content (Initially hidden) -->
+                <div id="manageRidersContent" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Manage Riders</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <button id="refresh-riders-btn" class="btn btn-outline-secondary">
+                                <i class="fas fa-sync-alt me-1"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Add New Rider</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3 user-search-container">
+                                        <label for="userSearch" class="form-label">Search Users by Email</label>
+                                        <input type="text" class="form-control" id="userSearch" placeholder="Start typing user email...">
+                                        <div id="userSearchResults" class="user-search-results"></div>
+                                    </div>
+                                    <div id="selectedUserInfo" class="mb-3 p-3 bg-light rounded" style="display: none;">
+                                        <h6>Selected User</h6>
+                                        <p class="mb-1"><strong>Name:</strong> <span id="selectedUserName"></span></p>
+                                        <p class="mb-1"><strong>Email:</strong> <span id="selectedUserEmail"></span></p>
+                                        <p class="mb-1"><strong>Phone:</strong> <span id="selectedUserPhone"></span></p>
+                                        <p class="mb-1"><strong>Current Role:</strong> <span id="selectedUserRole"></span></p>
+                                        <button id="makeRiderBtn" class="btn btn-primary mt-2" disabled>
+                                            <i class="fas fa-motorcycle me-1"></i> Make Rider
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Current Riders</h5>
+                                    <span class="badge bg-primary" id="ridersCount">0 riders</span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <input type="text" class="form-control" id="riderSearch" placeholder="Search riders by name or ID...">
+                                    </div>
+                                    <div id="ridersList">
+                                        <div class="text-center py-4 text-muted">
+                                            <i class="fas fa-motorcycle fa-3x mb-3"></i>
+                                            <p>No riders found</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Content (Initially hidden) -->
+                <div id="settingsContent" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Account Settings</h1>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mx-auto">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Change Password</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="password-form">
+                                        <form id="passwordChangeForm">
+                                            <div class="form-group">
+                                                <label for="currentPassword">Current Password</label>
+                                                <div class="position-relative">
+                                                    <input type="password" class="form-control" id="currentPassword" required>
+                                                    <i class="fas fa-eye password-toggle" onclick="togglePassword('currentPassword')"></i>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="newPassword">New Password</label>
+                                                <div class="position-relative">
+                                                    <input type="password" class="form-control" id="newPassword" required minlength="6">
+                                                    <i class="fas fa-eye password-toggle" onclick="togglePassword('newPassword')"></i>
+                                                </div>
+                                                <small class="form-text text-muted">Password must be at least 6 characters long</small>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="confirmPassword">Confirm New Password</label>
+                                                <div class="position-relative">
+                                                    <input type="password" class="form-control" id="confirmPassword" required>
+                                                    <i class="fas fa-eye password-toggle" onclick="togglePassword('confirmPassword')"></i>
+                                                </div>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary" id="changePasswordBtn">
+                                                Change Password
+                                            </button>
+                                            <div id="passwordAlert" class="alert mt-3" style="display: none;"></div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="order-details-title">Order Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="order-details-body">
+                    <!-- Order details will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" id="print-receipt-btn" class="btn btn-primary">
+                        <i class="fas fa-print me-1"></i> Print Receipt
+                    </button>
+                    <button type="button" id="update-status-btn" class="btn btn-warning" style="display: none;">
+                        <i class="fas fa-sync-alt me-1"></i> Update Status
+                    </button>
+                    <button type="button" id="assign-rider-btn" class="btn btn-info" style="display: none;">
+                        <i class="fas fa-motorcycle me-1"></i> Assign Rider
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assign Rider Modal -->
+    <div class="modal fade" id="assignRiderModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Assign Rider to Order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="rider-assign-select" class="form-label">Select Rider</label>
+                        <select class="form-select" id="rider-assign-select">
+                            <option value="">-- Select Rider --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirm-assign-rider-btn">Assign Rider</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Make Rider Modal -->
+    <div class="modal fade" id="makeRiderModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Make User a Rider</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="makeRiderForm">
+                    <div class="mb-3">
+                        <label for="riderIdInput" class="form-label">Rider ID</label>
+                        <input type="text" class="form-control" id="riderIdInput" placeholder="RIDER-001">
+                    </div>
+                    <div class="mb-3">
+                        <label for="vehicleTypeInput" class="form-label">Vehicle Type</label>
+                        <select class="form-select" id="vehicleTypeInput">
+                            <option value="Motorcycle">Motorcycle</option>
+                            <option value="Bicycle">Bicycle</option>
+                            <option value="Car">Car</option>
+                            <option value="Scooter">Scooter</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="vehiclePlateInput" class="form-label">Vehicle Plate Number</label>
+                        <input type="text" class="form-control" id="vehiclePlateInput" placeholder="ABC-123">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmMakeRiderBtn">Make Rider</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Remove Rider Modal -->
+    <div class="modal fade" id="removeRiderModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Remove Rider Status</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to remove this user's rider status?</p>
+                    <p class="text-muted">They will no longer be able to access the rider dashboard.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmRemoveRiderBtn">Remove Rider</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places&callback=initAutocomplete" async defer></script>
+    
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBD3OmV59vJXzEP_il3WYOQnnFPGvlFIbI",
+            authDomain: "fernandodb-65186.firebaseapp.com",
+            projectId: "fernandodb-65186",
+            storageBucket: "fernandodb-65186.appspot.com",
+            messagingSenderId: "849534271253",
+            appId: "1:849534271253:web:d436b46feab2070f6cb31c",
+            measurementId: "G-VB1FG2EHR3"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        const storage = firebase.storage();
+
+        // DOM Elements
+        const dashboardLink = document.getElementById('dashboardLink');
+        const manageRidersLink = document.getElementById('manageRidersLink');
+        const settingsLink = document.getElementById('settingsLink');
+        const dashboardContent = document.getElementById('dashboardContent');
+        const manageRidersContent = document.getElementById('manageRidersContent');
+        const settingsContent = document.getElementById('settingsContent');
+        const newOrderBtn = document.getElementById('new-order-btn');
+        const orderFormContainer = document.getElementById('order-form-container');
+        const cancelOrderBtn = document.getElementById('cancel-order-btn');
+        const submitOrderBtn = document.getElementById('submit-order-btn');
+        const basePriceEl = document.getElementById('base-price');
+        const toppingsPriceEl = document.getElementById('toppings-price');
+        const deliveryFeeEl = document.getElementById('delivery-fee');
+        const taxAmountEl = document.getElementById('tax-amount');
+        const totalPriceEl = document.getElementById('total-price');
+        const customerSearch = document.getElementById('customer-search');
+        const customerSearchResults = document.getElementById('customer-search-results');
+        const customerName = document.getElementById('customer-name');
+        const customerPhone = document.getElementById('customer-phone');
+        const ordersTableBody = document.getElementById('orders-table-body');
+        const ordersLoading = document.getElementById('orders-loading');
+        const todayOrdersCount = document.getElementById('today-orders-count');
+        const revenueAmount = document.getElementById('revenue-amount');
+        const pendingOrdersCount = document.getElementById('pending-orders-count');
+        const activeRidersCount = document.getElementById('active-riders-count');
+        const refreshOrdersBtn = document.getElementById('refresh-orders-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const dateTimeLabel = document.getElementById('date-time-label');
+        const orderDateTime = document.getElementById('order-date-time');
+        const deliveryAddressContainer = document.getElementById('delivery-address-container');
+        const riderSelectContainer = document.getElementById('rider-select-container');
+        const riderSelect = document.getElementById('rider-select');
+        const deliveryAddress = document.getElementById('delivery-address');
+        const mapElement = document.getElementById('map');
+        const userSearch = document.getElementById('userSearch');
+        const userSearchResults = document.getElementById('userSearchResults');
+        const selectedUserInfo = document.getElementById('selectedUserInfo');
+        const selectedUserName = document.getElementById('selectedUserName');
+        const selectedUserEmail = document.getElementById('selectedUserEmail');
+        const selectedUserPhone = document.getElementById('selectedUserPhone');
+        const selectedUserRole = document.getElementById('selectedUserRole');
+        const makeRiderBtn = document.getElementById('makeRiderBtn');
+        const riderSearch = document.getElementById('riderSearch');
+        const ridersList = document.getElementById('ridersList');
+        const ridersCount = document.getElementById('ridersCount');
+        const refreshRidersBtn = document.getElementById('refresh-riders-btn');
+        const confirmMakeRiderBtn = document.getElementById('confirmMakeRiderBtn');
+        const confirmRemoveRiderBtn = document.getElementById('confirmRemoveRiderBtn');
+        const passwordChangeForm = document.getElementById('passwordChangeForm');
+        const currentPassword = document.getElementById('currentPassword');
+        const newPassword = document.getElementById('newPassword');
+        const confirmPassword = document.getElementById('confirmPassword');
+        const passwordAlert = document.getElementById('passwordAlert');
+
+        // Modal elements
+        const orderDetailsModal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
+        const orderDetailsTitle = document.getElementById('order-details-title');
+        const orderDetailsBody = document.getElementById('order-details-body');
+        const printReceiptBtn = document.getElementById('print-receipt-btn');
+        const updateStatusBtn = document.getElementById('update-status-btn');
+        const assignRiderBtn = document.getElementById('assign-rider-btn');
+        const makeRiderModal = new bootstrap.Modal(document.getElementById('makeRiderModal'));
+        const removeRiderModal = new bootstrap.Modal(document.getElementById('removeRiderModal'));
+        const assignRiderModal = new bootstrap.Modal(document.getElementById('assignRiderModal'));
+
+        // Pricing data
+        const pricing = {
+            sizes: {
+                '6-inch': 24.99,
+                '8-inch': 35.99,
+                '10-inch': 49.99,
+                '12-inch': 64.99,
+                'quarter-sheet': 29.99,
+                'half-sheet': 49.99
+            },
+            toppings: 2.00,
+            deliveryFee: 5.00,
+            taxRate: 0.08
+        };
+
+        // State
+        let currentOrder = {
+            size: '',
+            toppings: [],
+            specialRequests: '',
+            deliveryMethod: 'pickup',
+            riderId: '',
+            riderName: '',
+            riderPhone: '',
+            riderVehicle: ''
+        };
+        let currentOrderDetails = null;
+        let ridersListData = [];
+        let map;
+        let autocomplete;
+        let currentSelectedUserId = null;
+        let allUsers = [];
+        let allRiders = [];
+
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initFirebaseAuth();
+            setupEventListeners();
+            loadRiders();
+            loadOrders();
+            calculateDashboardStats();
+            initAutocomplete();
+        });
+
+        function initFirebaseAuth() {
+            auth.onAuthStateChanged(user => {
+                if (!user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                // Verify admin role
+                db.collection('users').doc(user.uid).get()
+                    .then(doc => {
+                        if (!doc.exists || doc.data().role !== 'admin') {
+                            auth.signOut();
+                            window.location.href = 'unauthorized.html';
+                        }
+                    });
+            });
+        }
+
+        function initAutocomplete() {
+            try {
+                autocomplete = new google.maps.places.Autocomplete(
+                    deliveryAddress,
+                    { types: ['geocode'] }
+                );
+                
+                autocomplete.addListener('place_changed', function() {
+                    const place = autocomplete.getPlace();
+                    if (!place.geometry) return;
+                    
+                    mapElement.style.display = 'block';
+                    
+                    if (!map) {
+                        map = new google.maps.Map(mapElement, {
+                            center: place.geometry.location,
+                            zoom: 15
+                        });
+                    } else {
+                        map.setCenter(place.geometry.location);
+                    }
+                    
+                    new google.maps.Marker({
+                        map: map,
+                        position: place.geometry.location
+                    });
+                });
+            } catch (e) {
+                console.error("Error initializing autocomplete:", e);
+                deliveryAddress.placeholder = "Enter delivery address (autocomplete not available)";
+            }
+        }
+
+        function setupEventListeners() {
+            // Navigation
+            dashboardLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                dashboardContent.style.display = 'block';
+                manageRidersContent.style.display = 'none';
+                settingsContent.style.display = 'none';
+                dashboardLink.classList.add('active');
+                manageRidersLink.classList.remove('active');
+                settingsLink.classList.remove('active');
+            });
+
+            manageRidersLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                dashboardContent.style.display = 'none';
+                manageRidersContent.style.display = 'block';
+                settingsContent.style.display = 'none';
+                dashboardLink.classList.remove('active');
+                manageRidersLink.classList.add('active');
+                settingsLink.classList.remove('active');
+            });
+
+            settingsLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                dashboardContent.style.display = 'none';
+                manageRidersContent.style.display = 'none';
+                settingsContent.style.display = 'block';
+                dashboardLink.classList.remove('active');
+                manageRidersLink.classList.remove('active');
+                settingsLink.classList.add('active');
+            });
+
+            // Order form
+            newOrderBtn.addEventListener('click', function() {
+                orderFormContainer.style.display = 'block';
+                newOrderBtn.style.display = 'none';
+                customerSearch.focus();
+            });
+
+            cancelOrderBtn.addEventListener('click', function() {
+                orderFormContainer.style.display = 'none';
+                newOrderBtn.style.display = 'block';
+                resetOrderForm();
+            });
+
+            submitOrderBtn.addEventListener('click', submitOrder);
+            customerSearch.addEventListener('input', searchCustomers);
+            customerSearch.addEventListener('focus', function() {
+                if (customerSearch.value.length > 0) {
+                    customerSearchResults.style.display = 'block';
+                }
+            });
+            customerSearch.addEventListener('blur', function() {
+                setTimeout(() => {
+                    customerSearchResults.style.display = 'none';
+                }, 200);
+            });
+
+            document.querySelectorAll('input[name="delivery-method"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    currentOrder.deliveryMethod = this.value;
+                    
+                    if (this.value === 'pickup') {
+                        dateTimeLabel.textContent = 'Pickup Date';
+                        deliveryAddressContainer.style.display = 'none';
+                        riderSelectContainer.style.display = 'none';
+                        mapElement.style.display = 'none';
+                    } else {
+                        dateTimeLabel.textContent = 'Delivery Date';
+                        deliveryAddressContainer.style.display = 'block';
+                        riderSelectContainer.style.display = 'block';
+                    }
+                    calculatePrice();
+                });
+            });
+
+            riderSelect.addEventListener('change', function() {
+                const selectedRiderId = this.value;
+                const riderInfo = document.getElementById('selected-rider-info');
+                
+                if (selectedRiderId) {
+                    const rider = ridersListData.find(r => r.id === selectedRiderId);
+                    if (rider) {
+                        document.getElementById('selected-rider-name').textContent = rider.name;
+                        document.getElementById('selected-rider-phone').textContent = rider.phone;
+                        document.getElementById('selected-rider-vehicle').textContent = `${rider.vehicleType} (${rider.vehiclePlate})`;
+                        riderInfo.style.display = 'block';
+                        
+                        currentOrder.riderId = rider.riderId;
+                        currentOrder.riderName = rider.name;
+                        currentOrder.riderPhone = rider.phone;
+                        currentOrder.riderVehicle = `${rider.vehicleType} (${rider.vehiclePlate})`;
+                    }
+                } else {
+                    riderInfo.style.display = 'none';
+                    currentOrder.riderId = '';
+                    currentOrder.riderName = '';
+                    currentOrder.riderPhone = '';
+                    currentOrder.riderVehicle = '';
+                }
+            });
+
+            document.getElementById('cake-size').addEventListener('change', function() {
+                currentOrder.size = this.value;
+                calculatePrice();
+            });
+
+            document.querySelectorAll('input[name="toppings"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    currentOrder.toppings = Array.from(document.querySelectorAll('input[name="toppings"]:checked')).map(el => el.value);
+                    calculatePrice();
+                });
+            });
+
+            document.getElementById('special-requests').addEventListener('input', function() {
+                currentOrder.specialRequests = this.value;
+            });
+
+            refreshOrdersBtn.addEventListener('click', function() {
+                loadOrders();
+                loadRiders();
+                calculateDashboardStats();
+            });
+
+            logoutBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                auth.signOut().then(() => {
+                    window.location.href = 'login.html';
+                });
+            });
+
+            printReceiptBtn.addEventListener('click', printReceipt);
+            updateStatusBtn.addEventListener('click', showUpdateStatusOptions);
+            assignRiderBtn.addEventListener('click', showAssignRiderOptions);
+
+            // Rider management
+            userSearch.addEventListener('input', searchUsersForRider);
+            userSearch.addEventListener('focus', function() {
+                if (userSearch.value.length > 0) {
+                    userSearchResults.style.display = 'block';
+                }
+            });
+            userSearch.addEventListener('blur', function() {
+                setTimeout(() => {
+                    userSearchResults.style.display = 'none';
+                }, 200);
+            });
+
+            makeRiderBtn.addEventListener('click', function() {
+                makeRiderModal.show();
+            });
+
+            riderSearch.addEventListener('input', function() {
+                filterRiders(this.value.trim().toLowerCase());
+            });
+
+            refreshRidersBtn.addEventListener('click', function() {
+                loadRiders();
+            });
+
+            confirmMakeRiderBtn.addEventListener('click', function() {
+                makeUserRider();
+            });
+
+            confirmRemoveRiderBtn.addEventListener('click', function() {
+                removeRiderStatus();
+            });
+
+            // Password change form
+            passwordChangeForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                changePassword();
+            });
+        }
+
+        function searchCustomers() {
+            const searchTerm = customerSearch.value.trim().toLowerCase();
+            
+            if (searchTerm.length < 2) {
+                customerSearchResults.style.display = 'none';
+                return;
+            }
+            
+            customerSearchResults.innerHTML = '';
+            customerSearchResults.style.display = 'block';
+            
+            db.collection('users')
+                .where('email', '>=', searchTerm)
+                .where('email', '<=', searchTerm + '\uf8ff')
+                .limit(10)
+                .get()
+                .then(querySnapshot => {
+                    if (querySnapshot.empty) {
+                        customerSearchResults.innerHTML = '<div class="customer-search-item">No users found</div>';
+                        return;
+                    }
+                    
+                    querySnapshot.forEach(doc => {
+                        const user = doc.data();
+                        const item = document.createElement('div');
+                        item.className = 'customer-search-item';
+                        item.innerHTML = `
+                            <strong>${user.email}</strong><br>
+                            <small>${user.name || 'No name specified'}</small>
+                        `;
+                        item.addEventListener('click', () => {
+                            selectCustomer(user);
+                        });
+                        customerSearchResults.appendChild(item);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error searching users:', error);
+                    customerSearchResults.innerHTML = '<div class="customer-search-item">Error loading users</div>';
+                });
+        }
+
+        function selectCustomer(user) {
+            customerSearch.value = user.email;
+            customerName.value = user.name || '';
+            customerPhone.value = user.phone || '';
+            customerSearchResults.style.display = 'none';
+        }
+
+        function searchUsersForRider() {
+            const searchTerm = userSearch.value.trim().toLowerCase();
+            
+            if (searchTerm.length < 2) {
+                userSearchResults.style.display = 'none';
+                return;
+            }
+            
+            userSearchResults.innerHTML = '';
+            userSearchResults.style.display = 'block';
+            
+            db.collection('users')
+                .where('email', '>=', searchTerm)
+                .where('email', '<=', searchTerm + '\uf8ff')
+                .limit(10)
+                .get()
+                .then(querySnapshot => {
+                    if (querySnapshot.empty) {
+                        userSearchResults.innerHTML = '<div class="user-search-item">No users found</div>';
+                        return;
+                    }
+                    
+                    querySnapshot.forEach(doc => {
+                        const user = doc.data();
+                        const item = document.createElement('div');
+                        item.className = 'user-search-item';
+                        item.innerHTML = `
+                            <strong>${user.email}</strong><br>
+                            <small>${user.name || 'No name specified'} • ${user.role || 'customer'}</small>
+                        `;
+                        item.addEventListener('click', () => {
+                            selectUserForRider(doc.id, user);
+                        });
+                        userSearchResults.appendChild(item);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error searching users:', error);
+                    userSearchResults.innerHTML = '<div class="user-search-item">Error loading users</div>';
+                });
+        }
+
+        function selectUserForRider(userId, user) {
+            currentSelectedUserId = userId;
+            userSearch.value = user.email;
+            selectedUserName.textContent = user.name || 'Not specified';
+            selectedUserEmail.textContent = user.email;
+            selectedUserPhone.textContent = user.phone || 'Not specified';
+            selectedUserRole.textContent = user.role || 'customer';
+            
+            // Only enable the button if user is not already a rider
+            makeRiderBtn.disabled = user.role === 'rider';
+            
+            selectedUserInfo.style.display = 'block';
+            userSearchResults.style.display = 'none';
+        }
+
+        function filterRiders(searchTerm) {
+            const riderCards = document.querySelectorAll('.rider-card');
+            let visibleCount = 0;
+            
+            riderCards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    card.style.display = '';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            if (visibleCount === 0 && riderCards.length > 0) {
+                ridersList.innerHTML = '<div class="text-center py-4 text-muted">No riders match your search</div>';
+            }
+        }
+
+        function calculatePrice() {
+            let basePrice = 0;
+            let toppingsPrice = 0;
+            let deliveryFee = 0;
+            let taxAmount = 0;
+            let totalPrice = 0;
+            
+            if (currentOrder.size && pricing.sizes[currentOrder.size]) {
+                basePrice = pricing.sizes[currentOrder.size];
+            }
+            
+            toppingsPrice = currentOrder.toppings.length * pricing.toppings;
+            
+            if (currentOrder.deliveryMethod === 'rider') {
+                deliveryFee = pricing.deliveryFee;
+            }
+            
+            taxAmount = (basePrice + toppingsPrice + deliveryFee) * pricing.taxRate;
+            totalPrice = basePrice + toppingsPrice + deliveryFee + taxAmount;
+            
+            basePriceEl.textContent = `$${basePrice.toFixed(2)}`;
+            toppingsPriceEl.textContent = `$${toppingsPrice.toFixed(2)}`;
+            deliveryFeeEl.textContent = `$${deliveryFee.toFixed(2)}`;
+            taxAmountEl.textContent = `$${taxAmount.toFixed(2)}`;
+            totalPriceEl.textContent = `$${totalPrice.toFixed(2)}`;
+        }
+
+        function validateOrderForm() {
+            const orderDateTimeValue = document.getElementById('order-date-time').value;
+            const deliveryAddressValue = document.getElementById('delivery-address').value;
+            const cakeType = document.getElementById('cake-type').value;
+            const cakeSize = document.getElementById('cake-size').value;
+            const flavor = document.querySelector('input[name="flavor"]:checked');
+            const frosting = document.getElementById('frosting-type').value;
+            const customerNameValue = document.getElementById('customer-name').value;
+            const customerPhoneValue = document.getElementById('customer-phone').value;
+            
+            if (!customerNameValue) {
+                alert('Please enter customer name');
+                return false;
+            }
+            
+            if (!customerPhoneValue) {
+                alert('Please enter customer phone number');
+                return false;
+            }
+            
+            if (!orderDateTimeValue) {
+                alert('Please select a date and time');
+                return false;
+            }
+            
+            const selectedDate = new Date(orderDateTimeValue);
+            const now = new Date();
+            
+            if (selectedDate < now) {
+                alert('Please select a future date and time');
+                return false;
+            }
+            
+            if (currentOrder.deliveryMethod === 'rider') {
+                if (!deliveryAddressValue) {
+                    alert('Please enter delivery address');
+                    return false;
+                }
+                
+                if (!currentOrder.riderId) {
+                    alert('Please select a rider for delivery');
+                    return false;
+                }
+            }
+            
+            if (!cakeType) {
+                alert('Please select cake type');
+                return false;
+            }
+            
+            if (!cakeSize) {
+                alert('Please select cake size');
+                return false;
+            }
+            
+            if (!flavor) {
+                alert('Please select cake flavor');
+                return false;
+            }
+            
+            if (!frosting) {
+                alert('Please select frosting type');
+                return false;
+            }
+            
+            return true;
+        }
+
+        function resetOrderForm() {
+            customerSearch.value = '';
+            customerName.value = '';
+            customerPhone.value = '';
+            document.getElementById('order-date-time').value = '';
+            document.getElementById('delivery-address').value = '';
+            document.getElementById('cake-type').value = '';
+            document.getElementById('cake-size').value = '';
+            document.querySelectorAll('input[name="flavor"]').forEach(radio => radio.checked = false);
+            document.getElementById('frosting-type').value = '';
+            document.querySelectorAll('input[name="toppings"]').forEach(checkbox => checkbox.checked = false);
+            document.getElementById('special-requests').value = '';
+            document.getElementById('delivery-pickup').checked = true;
+            dateTimeLabel.textContent = 'Pickup Date';
+            deliveryAddressContainer.style.display = 'none';
+            riderSelectContainer.style.display = 'none';
+            mapElement.style.display = 'none';
+            document.getElementById('selected-rider-info').style.display = 'none';
+            riderSelect.innerHTML = '<option value="">-- Select Rider --</option>';
+            
+            currentOrder = {
+                size: '',
+                toppings: [],
+                specialRequests: '',
+                deliveryMethod: 'pickup',
+                riderId: '',
+                riderName: '',
+                riderPhone: '',
+                riderVehicle: ''
+            };
+            
+            basePriceEl.textContent = '$0.00';
+            toppingsPriceEl.textContent = '$0.00';
+            deliveryFeeEl.textContent = '$0.00';
+            taxAmountEl.textContent = '$0.00';
+            totalPriceEl.textContent = '$0.00';
+        }
+
+        function submitOrder() {
+            if (!validateOrderForm()) {
+                return;
+            }
+            
+            const orderDateTimeValue = document.getElementById('order-date-time').value;
+            const deliveryAddressValue = document.getElementById('delivery-address').value;
+            const cakeType = document.getElementById('cake-type').value;
+            const cakeSize = document.getElementById('cake-size').value;
+            const flavor = document.querySelector('input[name="flavor"]:checked').value;
+            const frosting = document.getElementById('frosting-type').value;
+            const specialRequests = document.getElementById('special-requests').value;
+            const customerNameValue = document.getElementById('customer-name').value;
+            const customerPhoneValue = document.getElementById('customer-phone').value;
+            const customerEmailValue = customerSearch.value;
+            const deliveryMethod = currentOrder.deliveryMethod;
+            
+            const basePrice = pricing.sizes[cakeSize] || 0;
+            const toppingsPrice = currentOrder.toppings.length * pricing.toppings;
+            const deliveryFee = deliveryMethod === 'rider' ? pricing.deliveryFee : 0;
+            const taxAmount = (basePrice + toppingsPrice + deliveryFee) * pricing.taxRate;
+            const totalPrice = basePrice + toppingsPrice + deliveryFee + taxAmount;
+            
+            const dateValue = new Date(orderDateTimeValue);
+            
+            const orderData = {
+                customerEmail: customerEmailValue,
+                customerName: customerNameValue,
+                customerPhone: customerPhoneValue,
+                items: [{
+                    type: cakeType,
+                    size: cakeSize,
+                    flavor: flavor,
+                    frosting: frosting,
+                    toppings: currentOrder.toppings,
+                    specialRequests: specialRequests
+                }],
+                basePrice: basePrice,
+                toppingsPrice: toppingsPrice,
+                deliveryFee: deliveryFee,
+                taxAmount: taxAmount,
+                totalPrice: totalPrice,
+                deliveryMethod: deliveryMethod,
+                status: 'pending',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                createdBy: auth.currentUser.uid,
+                riderId: '',
+                assignedAt: null,
+                dispatchedAt: null,
+                deliveredAt: null
+            };
+            
+            if (deliveryMethod === 'pickup') {
+                orderData.pickupDate = firebase.firestore.Timestamp.fromDate(dateValue);
+            } else {
+                orderData.deliveryDate = firebase.firestore.Timestamp.fromDate(dateValue);
+                orderData.deliveryAddress = deliveryAddressValue;
+                
+                if (currentOrder.riderId) {
+                    orderData.riderId = currentOrder.riderId;
+                    orderData.riderName = currentOrder.riderName;
+                    orderData.riderPhone = currentOrder.riderPhone;
+                    orderData.riderVehicle = currentOrder.riderVehicle;
+                    orderData.assignedAt = firebase.firestore.FieldValue.serverTimestamp();
+                }
+            }
+            
+            submitOrderBtn.disabled = true;
+            submitOrderBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...';
+            
+            db.collection('orders').add(orderData)
+                .then(docRef => {
+                    alert(`Order #${docRef.id} submitted successfully!`);
+                    orderFormContainer.style.display = 'none';
+                    newOrderBtn.style.display = 'block';
+                    resetOrderForm();
+                    loadOrders();
+                    calculateDashboardStats();
+                })
+                .catch(error => {
+                    console.error('Error submitting order:', error);
+                    alert('Error submitting order. Please try again.\n' + error.message);
+                })
+                .finally(() => {
+                    submitOrderBtn.disabled = false;
+                    submitOrderBtn.innerHTML = '<i class="fas fa-check me-2"></i>Submit Order';
+                });
+        }
+
+        function loadOrders() {
+            ordersLoading.style.display = 'block';
+            ordersTableBody.innerHTML = '';
+            
+            db.collection('orders')
+                .orderBy('createdAt', 'desc')
+                .limit(50)
+                .get()
+                .then(querySnapshot => {
+                    if (querySnapshot.empty) {
+                        ordersTableBody.innerHTML = '<tr><td colspan="9" class="text-center">No orders found</td></tr>';
+                        return;
+                    }
+                    
+                    querySnapshot.forEach(doc => {
+                        const order = doc.data();
+                        const dateField = order.deliveryMethod === 'pickup' ? order.pickupDate : order.deliveryDate;
+                        const formattedDate = dateField ? dateField.toDate().toLocaleString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }) : 'Not set';
+                        
+                        const statusBadge = getStatusBadge(order.status);
+                        const deliveryMethodBadge = order.deliveryMethod === 'pickup' ? 
+                            '<span class="badge bg-primary">Pickup</span>' : 
+                            '<span class="badge bg-success">Delivery</span>';
+                        
+                        let riderInfo = 'Not assigned';
+                        if (order.riderId && order.riderName) {
+                            riderInfo = `<span class="rider-badge">${order.riderName}</span>`;
+                        }
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>#${doc.id.substring(0, 8)}</td>
+                            <td>${order.customerName || order.customerEmail}</td>
+                            <td>${order.items[0].flavor} ${order.items[0].size}</td>
+                            <td>$${order.totalPrice.toFixed(2)}</td>
+                            <td>${formattedDate}</td>
+                            <td>${statusBadge}</td>
+                            <td>${deliveryMethodBadge}</td>
+                            <td>${riderInfo}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary view-order-btn" data-id="${doc.id}">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        `;
+                        row.querySelector('.view-order-btn').addEventListener('click', function() {
+                            const orderId = this.getAttribute('data-id');
+                            viewOrderDetails(orderId);
+                        });
+                        ordersTableBody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading orders:', error);
+                    ordersTableBody.innerHTML = '<tr><td colspan="9" class="text-center">Error loading orders</td></tr>';
+                })
+                .finally(() => {
+                    ordersLoading.style.display = 'none';
+                });
+        }
+
+        function getStatusBadge(status) {
+            switch(status) {
+                case 'pending':
+                    return '<span class="status-badge badge-pending">Pending</span>';
+                case 'preparing':
+                    return '<span class="status-badge badge-preparing">Preparing</span>';
+                case 'ready':
+                    return '<span class="status-badge badge-ready">Ready</span>';
+                case 'out-for-delivery':
+                    return '<span class="status-badge badge-delivery">Out for Delivery</span>';
+                case 'delivered':
+                    return '<span class="status-badge badge-delivered">Delivered</span>';
+                case 'cancelled':
+                    return '<span class="status-badge badge-cancelled">Cancelled</span>';
+                default:
+                    return '<span class="badge bg-light text-dark">Unknown</span>';
+            }
+        }
+
+        function viewOrderDetails(orderId) {
+            db.collection('orders').doc(orderId).get()
+                .then(doc => {
+                    if (!doc.exists) {
+                        alert('Order not found');
+                        return;
+                    }
+                    
+                    const order = doc.data();
+                    currentOrderDetails = { id: doc.id, ...order };
+                    
+                    const dateField = order.deliveryMethod === 'pickup' ? order.pickupDate : order.deliveryDate;
+                    const formattedDate = dateField ? dateField.toDate().toLocaleString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }) : 'Not set';
+                    
+                    const createdDate = order.createdAt.toDate();
+                    const formattedCreatedDate = createdDate.toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    
+                    orderDetailsTitle.textContent = `Order Details #${doc.id.substring(0, 8)}`;
+                    
+                    orderDetailsBody.innerHTML = `
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Customer Information</h6>
+                                <p><strong>Name:</strong> ${order.customerName}</p>
+                                <p><strong>Email:</strong> ${order.customerEmail || 'Not provided'}</p>
+                                <p><strong>Phone:</strong> ${order.customerPhone || 'Not provided'}</p>
+                                
+                                <h6 class="mt-4">Order Information</h6>
+                                <p><strong>Order Date:</strong> ${formattedCreatedDate}</p>
+                                <p><strong>${order.deliveryMethod === 'pickup' ? 'Pickup' : 'Delivery'} Date:</strong> ${formattedDate}</p>
+                                ${order.deliveryMethod === 'rider' ? `<p><strong>Delivery Address:</strong> ${order.deliveryAddress || 'Not provided'}</p>` : ''}
+                                <p><strong>Status:</strong> ${getStatusBadge(order.status)}</p>
+                                <p><strong>Delivery Method:</strong> ${order.deliveryMethod === 'pickup' ? 'Customer Pickup' : 'Rider Delivery'}</p>
+                                ${order.riderId ? `
+                                <p><strong>Assigned Rider:</strong> ${order.riderName}</p>
+                                <p><strong>Rider Phone:</strong> ${order.riderPhone}</p>
+                                <p><strong>Vehicle:</strong> ${order.riderVehicle}</p>
+                                ${order.assignedAt ? `<p><strong>Assigned At:</strong> ${order.assignedAt.toDate().toLocaleString()}</p>` : ''}
+                                ` : ''}
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Cake Details</h6>
+                                <p><strong>Type:</strong> ${order.items[0].size} ${order.items[0].type}</p>
+                                <p><strong>Flavor:</strong> ${order.items[0].flavor}</p>
+                                <p><strong>Frosting:</strong> ${order.items[0].frosting}</p>
+                                <p><strong>Toppings:</strong> ${order.items[0].toppings.length > 0 ? order.items[0].toppings.join(', ') : 'None'}</p>
+                                <p><strong>Special Requests:</strong> ${order.items[0].specialRequests || 'None'}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="order-summary mt-4">
+                            <h6>Payment Summary</h6>
+                            <table class="table table-bordered">
+                                <tr>
+                                    <th>Base Price</th>
+                                    <td>$${order.basePrice.toFixed(2)}</td>
+                                </tr>
+                                <tr>
+                                    <th>Toppings (${order.items[0].toppings.length} @ $${pricing.toppings.toFixed(2)})</th>
+                                    <td>$${order.toppingsPrice.toFixed(2)}</td>
+                                </tr>
+                                ${order.deliveryMethod === 'rider' ? `
+                                <tr>
+                                    <th>Delivery Fee</th>
+                                    <td>$${order.deliveryFee.toFixed(2)}</td>
+                                </tr>
+                                ` : ''}
+                                <tr>
+                                    <th>Tax (${(pricing.taxRate * 100)}%)</th>
+                                    <td>$${order.taxAmount.toFixed(2)}</td>
+                                </tr>
+                                <tr class="table-active">
+                                    <th>Total</th>
+                                    <td>$${order.totalPrice.toFixed(2)}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    `;
+                    
+                    updateStatusBtn.style.display = 'block';
+                    
+                    if (order.deliveryMethod === 'rider' && order.status !== 'delivered' && order.status !== 'cancelled' && !order.riderId) {
+                        assignRiderBtn.style.display = 'block';
+                    } else {
+                        assignRiderBtn.style.display = 'none';
+                    }
+                    
+                    orderDetailsModal.show();
+                })
+                .catch(error => {
+                    console.error('Error loading order details:', error);
+                    alert('Error loading order details');
+                });
+        }
+
+        function printReceipt() {
+            alert('Receipt printing would be implemented here');
+        }
+
+        function showUpdateStatusOptions() {
+            if (!currentOrderDetails) return;
+            
+            const currentStatus = currentOrderDetails.status;
+            let nextStatus = '';
+            let statusText = '';
+            
+            if (currentStatus === 'pending') {
+                nextStatus = 'preparing';
+                statusText = 'Mark as Preparing';
+            } else if (currentStatus === 'preparing') {
+                if (currentOrderDetails.deliveryMethod === 'pickup') {
+                    nextStatus = 'ready';
+                    statusText = 'Mark as Ready for Pickup';
+                } else {
+                    if (currentOrderDetails.riderId) {
+                        nextStatus = 'out-for-delivery';
+                        statusText = 'Mark as Out for Delivery';
+                    } else {
+                        nextStatus = 'ready';
+                        statusText = 'Mark as Ready for Delivery';
+                    }
+                }
+            } else if (currentStatus === 'ready') {
+                if (currentOrderDetails.deliveryMethod === 'pickup') {
+                    nextStatus = 'picked-up';
+                    statusText = 'Mark as Picked Up';
+                } else {
+                    nextStatus = 'delivered';
+                    statusText = 'Mark as Delivered';
+                }
+            } else if (currentStatus === 'out-for-delivery') {
+                nextStatus = 'delivered';
+                statusText = 'Mark as Delivered';
+            }
+            
+            if (confirm(`Are you sure you want to ${statusText.toLowerCase()}?`)) {
+                updateOrderStatus(nextStatus);
+            }
+        }
+
+        function updateOrderStatus(newStatus) {
+            if (!currentOrderDetails || !newStatus) return;
+            
+            updateStatusBtn.disabled = true;
+            updateStatusBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...';
+            
+            const updateData = {
+                status: newStatus,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            if (newStatus === 'out-for-delivery') {
+                updateData.dispatchedAt = firebase.firestore.FieldValue.serverTimestamp();
+            }
+            
+            if (newStatus === 'delivered') {
+                updateData.deliveredAt = firebase.firestore.FieldValue.serverTimestamp();
+            }
+            
+            db.collection('orders').doc(currentOrderDetails.id).update(updateData)
+            .then(() => {
+                orderDetailsModal.hide();
+                loadOrders();
+                calculateDashboardStats();
+            })
+            .catch(error => {
+                console.error('Error updating order status:', error);
+                alert('Error updating order status');
+            })
+            .finally(() => {
+                updateStatusBtn.disabled = false;
+                updateStatusBtn.innerHTML = 'Update Status';
+            });
+        }
+
+        function showAssignRiderOptions() {
+            if (!currentOrderDetails) return;
+            
+            const modalContent = `
+                <div class="modal-header">
+                    <h5 class="modal-title">Assign Rider to Order #${currentOrderDetails.id.substring(0, 8)}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="rider-assign-select" class="form-label">Select Rider</label>
+                        <select class="form-select" id="rider-assign-select">
+                            <option value="">-- Select Rider --</option>
+                            ${ridersListData.map(rider => 
+                                `<option value="${rider.id}">${rider.name} (${rider.vehicleType} - ${rider.riderId})</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirm-assign-rider-btn">Assign Rider</button>
+                </div>
+            `;
+            
+            const modalDiv = document.createElement('div');
+            modalDiv.className = 'modal fade';
+            modalDiv.id = 'assignRiderModal';
+            modalDiv.tabIndex = '-1';
+            modalDiv.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        ${modalContent}
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modalDiv);
+            
+            const assignModal = new bootstrap.Modal(modalDiv);
+            assignModal.show();
+            
+            document.getElementById('confirm-assign-rider-btn').addEventListener('click', function() {
+                const selectedRiderId = document.getElementById('rider-assign-select').value;
+                if (!selectedRiderId) {
+                    alert('Please select a rider');
+                    return;
+                }
+                
+                assignRiderToOrder(selectedRiderId, assignModal);
+            });
+            
+            modalDiv.addEventListener('hidden.bs.modal', function() {
+                document.body.removeChild(modalDiv);
+            });
+        }
+
+        async function assignRiderToOrder(riderId, modal) {
+            const rider = ridersListData.find(r => r.id === riderId);
+            if (!rider) {
+                alert("Selected rider not found in local data");
+                return;
+            }
+            
+            const confirmBtn = document.getElementById('confirm-assign-rider-btn');
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Assigning...';
+
+            try {
+                // Update the order document
+                await db.collection('orders').doc(currentOrderDetails.id).update({
+                    riderId: rider.riderId,
+                    riderName: rider.name,
+                    riderPhone: rider.phone,
+                    riderVehicle: `${rider.vehicleType} (${rider.vehiclePlate})`,
+                    status: 'ready',
+                    assignedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                modal.hide();
+                orderDetailsModal.hide();
+                
+                // Refresh data
+                loadOrders();
+                
+                alert(`Successfully assigned to ${rider.name}`);
+            } catch (error) {
+                console.error('Error during assignment:', error);
+                alert(`Failed to assign rider: ${error.message}`);
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = 'Assign Rider';
+            }
+        }
+
+        function calculateDashboardStats() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            db.collection('orders')
+                .where('createdAt', '>=', today)
+                .get()
+                .then(querySnapshot => {
+                    todayOrdersCount.textContent = querySnapshot.size;
+                });
+            
+            db.collection('orders')
+                .where('status', 'in', ['pending', 'preparing'])
+                .get()
+                .then(querySnapshot => {
+                    pendingOrdersCount.textContent = querySnapshot.size;
+                });
+            
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            
+            db.collection('orders')
+                .where('createdAt', '>=', thirtyDaysAgo)
+                .get()
+                .then(querySnapshot => {
+                    let totalRevenue = 0;
+                    querySnapshot.forEach(doc => {
+                        totalRevenue += doc.data().totalPrice;
+                    });
+                    revenueAmount.textContent = `$${totalRevenue.toFixed(2)}`;
+                });
+            
+            // Count active (online) riders
+            db.collection('users')
+                .where('role', '==', 'rider')
+                .where('riderStatus', '==', 'online')
+                .get()
+                .then(querySnapshot => {
+                    activeRidersCount.textContent = querySnapshot.size;
+                });
+        }
+
+        function loadRiders() {
+            db.collection('users')
+                .where('role', '==', 'rider')
+                .get()
+                .then(querySnapshot => {
+                    ridersListData = [];
+                    ridersList.innerHTML = '';
+                    
+                    if (querySnapshot.empty) {
+                        ridersList.innerHTML = '<div class="text-center py-4 text-muted"><i class="fas fa-motorcycle fa-3x mb-3"></i><p>No riders found</p></div>';
+                        ridersCount.textContent = '0 riders';
+                        return;
+                    }
+                    
+                    querySnapshot.forEach(doc => {
+                        const rider = doc.data();
+                        ridersListData.push({ id: doc.id, ...rider });
+                        
+                        const riderCard = document.createElement('div');
+                        riderCard.className = 'card mb-3 rider-card';
+                        riderCard.innerHTML = `
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h5 class="card-title">${rider.name}</h5>
+                                        <p class="card-text mb-1">
+                                            <i class="fas fa-id-card"></i> ${rider.riderId || 'No ID'}
+                                        </p>
+                                        <p class="card-text mb-1">
+                                            <i class="fas fa-envelope"></i> ${rider.email}
+                                        </p>
+                                        <p class="card-text mb-1">
+                                            <i class="fas fa-phone"></i> ${rider.phone || 'No phone'}
+                                        </p>
+                                        <p class="card-text">
+                                            <i class="fas fa-car"></i> ${rider.vehicleType || 'No vehicle'} (${rider.vehiclePlate || 'No plate'})
+                                        </p>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="rider-status-badge ${rider.riderStatus === 'online' ? 'rider-online' : 'rider-offline'}">
+                                            ${rider.riderStatus || 'offline'}
+                                        </span>
+                                        <button class="btn btn-sm btn-outline-danger mt-2 remove-rider-btn" data-id="${doc.id}">
+                                            <i class="fas fa-user-minus"></i> Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        riderCard.querySelector('.remove-rider-btn').addEventListener('click', function() {
+                            currentSelectedUserId = this.getAttribute('data-id');
+                            removeRiderModal.show();
+                        });
+                        ridersList.appendChild(riderCard);
+                    });
+                    
+                    ridersCount.textContent = `${querySnapshot.size} ${querySnapshot.size === 1 ? 'rider' : 'riders'}`;
+                })
+                .catch(error => {
+                    console.error('Error loading riders:', error);
+                    ridersList.innerHTML = '<div class="text-center py-4 text-danger"><i class="fas fa-exclamation-triangle"></i><p>Error loading riders</p></div>';
+                });
+        }
+
+        function makeUserRider() {
+            const riderId = document.getElementById('riderIdInput').value.trim();
+            const vehicleType = document.getElementById('vehicleTypeInput').value;
+            const vehiclePlate = document.getElementById('vehiclePlateInput').value.trim();
+            
+            if (!riderId) {
+                alert('Please enter a rider ID');
+                return;
+            }
+            
+            if (!vehiclePlate) {
+                alert('Please enter a vehicle plate number');
+                return;
+            }
+            
+            confirmMakeRiderBtn.disabled = true;
+            confirmMakeRiderBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+            
+            // Get the selected user's data first
+            db.collection('users').doc(currentSelectedUserId).get()
+                .then(doc => {
+                    if (!doc.exists) {
+                        throw new Error('User not found');
+                    }
+                    
+                    const user = doc.data();
+                    const updateData = {
+                        role: 'rider',
+                        riderId: riderId,
+                        vehicleType: vehicleType,
+                        vehiclePlate: vehiclePlate,
+                        riderStatus: 'offline',
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        keywords: [
+                            riderId.toLowerCase(),
+                            vehicleType.toLowerCase(),
+                            vehiclePlate.toLowerCase(),
+                            ...(user.name ? user.name.toLowerCase().split(' ') : []),
+                            ...user.email.toLowerCase().split('@')[0].split('.')
+                        ]
+                    };
+                    
+                    return db.collection('users').doc(currentSelectedUserId).update(updateData);
+                })
+                .then(() => {
+                    makeRiderModal.hide();
+                    alert('User successfully made a rider!');
+                    userSearch.value = '';
+                    selectedUserInfo.style.display = 'none';
+                    loadRiders();
+                })
+                .catch(error => {
+                    console.error('Error making user rider:', error);
+                    alert('Error making user rider: ' + error.message);
+                })
+                .finally(() => {
+                    confirmMakeRiderBtn.disabled = false;
+                    confirmMakeRiderBtn.innerHTML = 'Make Rider';
+                });
+        }
+
+        function removeRiderStatus() {
+            confirmRemoveRiderBtn.disabled = true;
+            confirmRemoveRiderBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+            
+            const updateData = {
+                role: 'customer',
+                riderId: firebase.firestore.FieldValue.delete(),
+                vehicleType: firebase.firestore.FieldValue.delete(),
+                vehiclePlate: firebase.firestore.FieldValue.delete(),
+                riderStatus: firebase.firestore.FieldValue.delete(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            db.collection('users').doc(currentSelectedUserId).update(updateData)
+                .then(() => {
+                    removeRiderModal.hide();
+                    alert('Rider status removed successfully!');
+                    loadRiders();
+                })
+                .catch(error => {
+                    console.error('Error removing rider status:', error);
+                    alert('Error removing rider status: ' + error.message);
+                })
+                .finally(() => {
+                    confirmRemoveRiderBtn.disabled = false;
+                    confirmRemoveRiderBtn.innerHTML = 'Remove Rider';
+                });
+        }
+
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = input.nextElementSibling;
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                input.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
+        }
+
+        function changePassword() {
+            const currentPasswordVal = currentPassword.value;
+            const newPasswordVal = newPassword.value;
+            const confirmPasswordVal = confirmPassword.value;
+            
+            // Reset alert
+            passwordAlert.style.display = 'none';
+            passwordAlert.className = 'alert mt-3';
+            
+            // Validate passwords match
+            if (newPasswordVal !== confirmPasswordVal) {
+                showPasswordAlert('New passwords do not match', 'danger');
+                return;
+            }
+            
+            // Validate password length
+            if (newPasswordVal.length < 6) {
+                showPasswordAlert('Password must be at least 6 characters', 'danger');
+                return;
+            }
+            
+            // Get current user
+            const user = auth.currentUser;
+            const credential = firebase.auth.EmailAuthProvider.credential(
+                user.email, 
+                currentPasswordVal
+            );
+            
+            // Reauthenticate user
+            user.reauthenticateWithCredential(credential)
+                .then(() => {
+                    // Change password
+                    return user.updatePassword(newPasswordVal);
+                })
+                .then(() => {
+                    showPasswordAlert('Password changed successfully!', 'success');
+                    passwordChangeForm.reset();
+                })
+                .catch(error => {
+                    console.error('Error changing password:', error);
+                    let message = 'Error changing password';
+                    if (error.code === 'auth/wrong-password') {
+                        message = 'Current password is incorrect';
+                    } else if (error.code === 'auth/weak-password') {
+                        message = 'Password is too weak';
+                    }
+                    showPasswordAlert(message, 'danger');
+                });
+        }
+
+        function showPasswordAlert(message, type) {
+            passwordAlert.textContent = message;
+            passwordAlert.classList.add(`alert-${type}`);
+            passwordAlert.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

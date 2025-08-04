@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fernando's Bakeshop</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        :root {
+            --primary: #515151;
+            --secondary: #f8f9fa;
+            --accent: #ff6b6b;
+            --danger: #e74a3b;
+            --warning: #f6c23e;
+            --success: #1cc88a;
+            --info: #36b9cc;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
+        .sidebar {
+            background-color: var(--primary);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            padding-top: 20px;
+            width: 250px;
+        }
+        .sidebar a {
+            color: white;
+            padding: 10px 15px;
+            display: block;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .sidebar a:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        .sidebar a.active {
+            background-color: var(--accent);
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            border: none;
+        }
+        .order-card {
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+        .order-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        .order-status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-processing {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        .status-done {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-to-deliver {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-on-the-way {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        .status-delivered {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .status-timeline {
+            position: relative;
+            padding-left: 30px;
+            margin: 20px 0;
+        }
+        .status-timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #e9ecef;
+        }
+        .status-step {
+            position: relative;
+            padding-bottom: 20px;
+        }
+        .status-step:last-child {
+            padding-bottom: 0;
+        }
+        .status-step::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #e9ecef;
+            border: 3px solid white;
+        }
+        .status-step.active::before {
+            background-color: var(--success);
+        }
+        .status-step.completed::before {
+            background-color: var(--success);
+        }
+        .status-step .status-date {
+            font-size: 12px;
+            color: #6c757d;
+        }
+        .status-step .status-content {
+            padding: 5px 0;
+        }
+        .order-progress {
+            height: 6px;
+            border-radius: 3px;
+            background-color: #e9ecef;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        .progress-bar {
+            background-color: var(--success);
+            transition: width 0.6s ease;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .empty-state i {
+            font-size: 60px;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+        .empty-state h4 {
+            color: #6c757d;
+        }
+        .new-order-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: var(--accent);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        /* AI/Gallery Styles */
+        .ai-gallery-container {
+            display: none;
+        }
+        .ai-gallery-container.active {
+            display: block;
+        }
+        .chat {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            height: calc(100vh - 200px);
+        }
+        .msg {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 14px;
+            background: #e1e1e1;
+            align-self: flex-end;
+            white-space: pre-line;
+        }
+        .ai {
+            background: #d4ffdf;
+            align-self: flex-start;
+        }
+        .msg img {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-top: 6px;
+        }
+        .promptBar {
+            display: flex;
+            padding: 14px;
+            gap: 10px;
+            background: #fff;
+            border-top: 1px solid #ccc;
+        }
+        textarea {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 12px;
+            border: 1px solid #ccc;
+            resize: none;
+        }
+        .promptBar button {
+            padding: 0 22px;
+            border: none;
+            border-radius: 12px;
+            background: #4caf50;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .promptBar button:hover {
+            background: #45a049;
+        }
+                .password-form {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .password-form .form-group {
+            margin-bottom: 20px;
+        }
+        .password-form label {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .password-form .btn-primary {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+        }
+        .password-form .alert {
+            margin-top: 20px;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            top: 35px;
+            cursor: pointer;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="text-center mb-4">
+            <h4>Fernando's Bakeshop</h4>
+            <hr>
+        </div>
+        <a href="#" class="nav-item" data-target="ai-tab"><i class="fas fa-robot mr-2"></i>AI Cake Designer</a>
+        <a href="#" class="nav-item" data-target="gallery-tab"><i class="fas fa-images mr-2"></i>Gallery</a>
+        <a href="#" class="nav-item active" data-target="orders-tab"><i class="fas fa-shopping-bag mr-2"></i>My Orders</a>
+        <a href="#" class="nav-item" data-target="settings-tab"><i class="fas fa-cog mr-2"></i>Settings</a>
+        <div class="mt-4 pt-4 border-top">
+            <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt mr-2"></i>Logout</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <!-- AI/Gallery Container -->
+        <div id="ai-tab" class="ai-gallery-container">
+            <div id="chat" class="chat"></div>
+            <div class="promptBar">
+                <textarea id="promptInput" rows="2" placeholder="Describe your cake..."></textarea>
+                <button onclick="sendPrompt()">Send</button>
+            </div>
+        </div>
+
+        <!-- Gallery Container -->
+        <div id="gallery-tab" class="ai-gallery-container">
+            <div id="gallery" class="chat"></div>
+        </div>
+
+        <!-- Orders Container -->
+        <div id="orders-tab" class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>My Orders</h2>
+            </div>
+
+            <!-- Order Status Summary Cards -->
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h1 class="display-4" id="totalOrders">0</h1>
+                            <p class="text-muted">Total Orders</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h1 class="display-4" id="processingOrders">0</h1>
+                            <p class="text-muted">In Process</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h1 class="display-4" id="toDeliverOrders">0</h1>
+                            <p class="text-muted">To Deliver</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h1 class="display-4" id="deliveredOrders">0</h1>
+                            <p class="text-muted">Delivered</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order List -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5>Recent Orders</h5>
+                </div>
+                <div class="card-body">
+                    <div id="ordersList">
+                        <!-- Orders will be loaded here -->
+                        <div class="empty-state">
+                            <i class="fas fa-shopping-bag"></i>
+                            <h4>No orders found</h4>
+                            <p>You don't have any orders yet</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Details Modal -->
+            <div class="modal fade" id="orderModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="orderModalTitle">Order Tracking</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body" id="orderDetails">
+                            <!-- Order details will be loaded here -->
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <!-- Settings Container -->
+    <div id="settings-tab" class="ai-gallery-container">
+        <div class="card">
+            <div class="card-header">
+                <h5>Account Settings</h5>
+            </div>
+            <div class="card-body">
+                <div class="password-form">
+                    <h4 class="text-center mb-4">Change Password</h4>
+                    <form id="passwordChangeForm">
+                        <div class="form-group">
+                            <label for="currentPassword">Current Password</label>
+                            <div class="position-relative">
+                                <input type="password" class="form-control" id="currentPassword" required>
+                                <i class="fas fa-eye password-toggle" onclick="togglePassword('currentPassword')"></i>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">New Password</label>
+                            <div class="position-relative">
+                                <input type="password" class="form-control" id="newPassword" required minlength="6">
+                                <i class="fas fa-eye password-toggle" onclick="togglePassword('newPassword')"></i>
+                            </div>
+                            <small class="form-text text-muted">Password must be at least 6 characters long</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm New Password</label>
+                            <div class="position-relative">
+                                <input type="password" class="form-control" id="confirmPassword" required>
+                                <i class="fas fa-eye password-toggle" onclick="togglePassword('confirmPassword')"></i>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="changePasswordBtn">
+                            Change Password
+                        </button>
+                        <div id="passwordAlert" class="alert mt-3" style="display: none;"></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase and other scripts -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBD3OmV59vJXzEP_il3WYOQnnFPGvlFIbI",
+            authDomain: "fernandodb-65186.firebaseapp.com",
+            projectId: "fernandodb-65186",
+            storageBucket: "fernandodb-65186.appspot.com",
+            messagingSenderId: "849534271253",
+            appId: "1:849534271253:web:d436b46feab2070f6cb31c",
+            measurementId: "G-VB1FG2EHR3"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // DOM elements
+        const logoutBtn = document.getElementById('logoutBtn');
+        const orderModal = $('#orderModal');
+        
+        // Count elements
+        const totalOrdersEl = document.getElementById('totalOrders');
+        const processingOrdersEl = document.getElementById('processingOrders');
+        const toDeliverOrdersEl = document.getElementById('toDeliverOrders');
+        const deliveredOrdersEl = document.getElementById('deliveredOrders');
+        
+        // Order list
+        const ordersList = document.getElementById('ordersList');
+
+        // AI/Gallery elements
+        const chatBox = document.getElementById('chat');
+        const galleryBox = document.getElementById('gallery');
+        const promptInput = document.getElementById('promptInput');
+        const API_KEY = "74ad50f7-9c3e-44bc-a53c-0cd871641f12";
+        const ENDPOINT = "https://api.deepai.org/api/stable-diffusion";
+        let galleryHTML = "";   // will store generated image bubbles
+
+        // Tab switching
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Update active nav item
+                document.querySelectorAll('.nav-item').forEach(nav => {
+                    nav.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // Hide all containers
+                document.querySelectorAll('.ai-gallery-container, #orders-tab').forEach(container => {
+                    container.style.display = 'none';
+                });
+                
+                // Show selected container
+                const target = this.getAttribute('data-target');
+                document.getElementById(target).style.display = 'block';
+                
+                // Special handling for gallery
+                if (target === 'gallery-tab') {
+                    galleryBox.innerHTML = galleryHTML || "No images yet.";
+                }
+            });
+        });
+
+        // Check authentication state
+        auth.onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+            } else {
+                // First try to find orders by userId
+                loadOrdersByUserId(user.uid).then(orders => {
+                    if (orders.length === 0) {
+                        // If no orders found by userId, try by email
+                        loadOrdersByEmail(user.email);
+                    }
+                });
+            }
+        });
+
+        // Load orders by user ID
+        async function loadOrdersByUserId(userId) {
+            try {
+                const ordersRef = db.collection('orders');
+                const snapshot = await ordersRef.where('userId', '==', userId).get();
+                
+                if (snapshot.empty) {
+                    return [];
+                }
+
+                const orders = [];
+                snapshot.forEach(doc => {
+                    orders.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+
+                displayOrders(orders);
+                return orders;
+            } catch (error) {
+                console.error("Error loading orders by user ID:", error);
+                return [];
+            }
+        }
+
+        // Load orders by email
+        async function loadOrdersByEmail(email) {
+            try {
+                const ordersRef = db.collection('orders');
+                const snapshot = await ordersRef.where('customerEmail', '==', email).get();
+                
+                if (snapshot.empty) {
+                    console.log('No orders found for this email');
+                    return [];
+                }
+
+                const orders = [];
+                snapshot.forEach(doc => {
+                    orders.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+
+                displayOrders(orders);
+                return orders;
+            } catch (error) {
+                console.error("Error loading orders by email:", error);
+                return [];
+            }
+        }
+
+        // Display orders in the UI
+        function displayOrders(orders) {
+            let totalCount = 0;
+            let processingCount = 0;
+            let toDeliverCount = 0;
+            let deliveredCount = 0;
+            
+            let ordersHtml = '';
+            
+            if (orders.length === 0) {
+                // Keep the empty state message
+                return;
+            }
+            
+            orders.forEach(order => {
+                const orderDate = new Date(order.createdAt?.seconds * 1000 || order.orderDate?.seconds * 1000 || Date.now());
+                const formattedDate = orderDate.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                const total = order.totalPrice || order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                
+                // Status counts
+                totalCount++;
+                if (order.status === 'processing') processingCount++;
+                if (order.status === 'done' || order.status === 'to-deliver' || order.status === 'on-the-way') toDeliverCount++;
+                if (order.status === 'delivered') deliveredCount++;
+                
+                // Status badge
+                let statusBadge = '';
+                let statusClass = '';
+                switch(order.status) {
+                    case 'processing':
+                        statusBadge = 'In Process';
+                        statusClass = 'status-processing';
+                        break;
+                    case 'done':
+                        statusBadge = 'Done';
+                        statusClass = 'status-done';
+                        break;
+                    case 'to-deliver':
+                        statusBadge = 'To Deliver';
+                        statusClass = 'status-to-deliver';
+                        break;
+                    case 'on-the-way':
+                        statusBadge = 'On the Way';
+                        statusClass = 'status-on-the-way';
+                        break;
+                    case 'delivered':
+                        statusBadge = 'Delivered';
+                        statusClass = 'status-delivered';
+                        break;
+                }
+                
+                // Check if order is new (placed within last 24 hours)
+                const isNewOrder = (new Date() - orderDate) < (24 * 60 * 60 * 1000);
+                
+                ordersHtml += `
+                    <div class="card order-card mb-3" data-id="${order.id}" data-status="${order.status}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="mb-1">Order #${order.id.substring(0, 8)}</h5>
+                                    <small class="text-muted">${formattedDate}</small>
+                                </div>
+                                <span class="order-status ${statusClass}">${statusBadge}</span>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>${order.items?.length || 0} item${order.items?.length !== 1 ? 's' : ''}</span>
+                                    <strong>$${total.toFixed(2)}</strong>
+                                </div>
+                                
+                                <!-- Progress bar showing order status -->
+                                <div class="order-progress mt-2">
+                                    <div class="progress-bar" style="width: ${getProgressWidth(order.status)}%"></div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between text-center mt-1">
+                                    <small class="text-muted">Processing</small>
+                                    <small class="text-muted">Done</small>
+                                    <small class="text-muted">To Deliver</small>
+                                    <small class="text-muted">On the Way</small>
+                                    <small class="text-muted">Delivered</small>
+                                </div>
+                            </div>
+                            
+                            <button class="btn btn-sm btn-outline-primary mt-3 view-order" data-id="${order.id}">
+                                <i class="fas fa-eye mr-1"></i> Track Order
+                            </button>
+                        </div>
+                        ${isNewOrder ? '<div class="new-order-badge"><i class="fas fa-bell"></i></div>' : ''}
+                    </div>
+                `;
+            });
+            
+            // Update counts
+            totalOrdersEl.textContent = totalCount;
+            processingOrdersEl.textContent = processingCount;
+            toDeliverOrdersEl.textContent = toDeliverCount;
+            deliveredOrdersEl.textContent = deliveredCount;
+            
+            // Update order list
+            if (ordersHtml) {
+                ordersList.innerHTML = ordersHtml;
+            }
+            
+            // Add event listeners to view buttons
+            document.querySelectorAll('.view-order').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const orderId = e.target.closest('[data-id]').getAttribute('data-id');
+                    showOrderDetails(orderId);
+                });
+            });
+        }
+
+        // Calculate progress bar width based on order status
+        function getProgressWidth(status) {
+            switch(status) {
+                case 'processing': return 20;
+                case 'done': return 40;
+                case 'to-deliver': return 60;
+                case 'on-the-way': return 80;
+                case 'delivered': return 100;
+                default: return 0;
+            }
+        }
+
+        // Show order details with tracking information
+        function showOrderDetails(orderId) {
+            db.collection('orders').doc(orderId).get().then((doc) => {
+                if (doc.exists) {
+                    const order = doc.data();
+                    const orderDate = new Date(order.createdAt?.seconds * 1000 || order.orderDate?.seconds * 1000 || Date.now()).toLocaleString();
+                    const total = order.totalPrice || order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                    
+                    let itemsHtml = '';
+                    if (order.items) {
+                        order.items.forEach(item => {
+                            itemsHtml += `
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <h6>${item.name || 'Custom Cake'}</h6>
+                                        <small class="text-muted">Qty: ${item.quantity} × $${item.price?.toFixed(2) || '0.00'}</small>
+                                    </div>
+                                    <div>$${(item.price * item.quantity).toFixed(2)}</div>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    let statusBadge = '';
+                    switch(order.status) {
+                        case 'processing':
+                            statusBadge = '<span class="order-status status-processing">In Process</span>';
+                            break;
+                        case 'done':
+                            statusBadge = '<span class="order-status status-done">Done</span>';
+                            break;
+                        case 'to-deliver':
+                            statusBadge = '<span class="order-status status-to-deliver">To Deliver</span>';
+                            break;
+                        case 'on-the-way':
+                            statusBadge = '<span class="order-status status-on-the-way">On the Way</span>';
+                            break;
+                        case 'delivered':
+                            statusBadge = '<span class="order-status status-delivered">Delivered</span>';
+                            break;
+                    }
+                    
+                    // Status timeline
+                    let statusTimeline = '';
+                    if (order.statusHistory) {
+                        statusTimeline = `
+                            <div class="mt-4">
+                                <h5>Order Status Timeline</h5>
+                                <div class="status-timeline">
+                        `;
+                        
+                        // Sort status history by timestamp
+                        order.statusHistory.sort((a, b) => a.timestamp.seconds - b.timestamp.seconds);
+                        
+                        // Define the correct order of statuses
+                        const statusOrder = ['processing', 'done', 'to-deliver', 'on-the-way', 'delivered'];
+                        
+                        order.statusHistory.forEach((statusUpdate, index) => {
+                            const statusDate = new Date(statusUpdate.timestamp.seconds * 1000).toLocaleString();
+                            let statusText = '';
+                            let stepClass = '';
+                            
+                            // Determine if this step is completed or active
+                            const currentStatusIndex = statusOrder.indexOf(order.status);
+                            const thisStatusIndex = statusOrder.indexOf(statusUpdate.status);
+                            
+                            if (thisStatusIndex < currentStatusIndex) {
+                                stepClass = 'completed';
+                            } else if (thisStatusIndex === currentStatusIndex) {
+                                stepClass = 'active';
+                            }
+                            
+                            switch(statusUpdate.status) {
+                                case 'processing':
+                                    statusText = 'Order in Process';
+                                    break;
+                                case 'done':
+                                    statusText = 'Preparation Done';
+                                    break;
+                                case 'to-deliver':
+                                    statusText = 'Ready to Deliver';
+                                    break;
+                                case 'on-the-way':
+                                    statusText = 'On the Way';
+                                    break;
+                                case 'delivered':
+                                    statusText = 'Order Delivered';
+                                    break;
+                            }
+                            
+                            statusTimeline += `
+                                <div class="status-step ${stepClass}">
+                                    <div class="status-date">${statusDate}</div>
+                                    <div class="status-content">
+                                        <strong>${statusText}</strong>
+                                        ${statusUpdate.notes ? `<p class="mb-0">${statusUpdate.notes}</p>` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        statusTimeline += `</div></div>`;
+                    }
+                    
+                    // Delivery information
+                    let deliveryInfo = '';
+                    if (order.deliveryAddress) {
+                        deliveryInfo = `
+                            <div class="mt-4">
+                                <h5>Delivery Information</h5>
+                                <p><strong>Address:</strong> ${order.deliveryAddress}</p>
+                                ${order.deliveryNotes ? `<p><strong>Notes:</strong> ${order.deliveryNotes}</p>` : ''}
+                            </div>
+                        `;
+                    }
+                    
+                    // Rider information (if assigned)
+                    let riderInfo = '';
+                    if (order.riderId) {
+                        riderInfo = `
+                            <div class="mt-3">
+                                <h5>Delivery Rider</h5>
+                                <div class="d-flex align-items-center bg-light p-3 rounded">
+                                    <img src="https://ui-avatars.com/api/?name=${order.riderName || 'Rider'}&background=random" 
+                                         alt="Rider" class="mr-3" width="50">
+                                    <div>
+                                        <strong>${order.riderName || 'Delivery Rider'}</strong><br>
+                                        <small class="text-muted">Contact: ${order.riderPhone || 'Not provided'}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // Set modal title
+                    document.getElementById('orderModalTitle').textContent = `Order #${orderId.substring(0, 8)} Tracking`;
+                    
+                    // Set modal content
+                    document.getElementById('orderDetails').innerHTML = `
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Order ID:</strong> ${orderId}</p>
+                                <p><strong>Order Date:</strong> ${orderDate}</p>
+                                <p><strong>Status:</strong> ${statusBadge}</p>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <h4>Total: $${total.toFixed(2)}</h4>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h5>Order Items</h5>
+                            ${itemsHtml || '<p>No items details available</p>'}
+                        </div>
+                        
+                        ${deliveryInfo}
+                        ${riderInfo}
+                        ${statusTimeline}
+                    `;
+                    
+                    // Show modal
+                    orderModal.modal('show');
+                }
+            });
+        }
+
+        // Logout
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            auth.signOut().then(() => {
+                window.location.href = 'login.html';
+            });
+        });
+
+        // AI/Gallery Functions
+        function switchTab(tab){
+            aiBtn.classList.toggle('active', tab==='ai');
+            galleryBtn.classList.toggle('active', tab==='gallery');
+            chatBox.innerHTML = (tab==='gallery') ? galleryHTML || "No images yet." : "";
+        }
+
+        async function sendPrompt(){
+            const prompt = promptInput.value.trim();
+            if(!prompt) return;
+            promptInput.value = "";
+
+            appendMsg(prompt,false);               // user bubble
+            const thinking = appendMsg("…thinking 🤔",true);   // placeholder AI bubble
+
+            try{
+                const fd = new FormData();
+                fd.append("text", prompt);
+
+                const res = await fetch(ENDPOINT,{
+                    method:"POST",
+                    headers:{ "api-key": API_KEY },
+                    body: fd
+                });
+                const data = await res.json();
+
+                if(res.ok && data.output_url){
+                    thinking.innerHTML =
+                        `<img src="${data.output_url}" alt="AI image">
+                         \nHere are some ideas you could try next:\n• "Rainbow drip cake with sprinkles"\n• "Minimalist black-and-white wedding cake"\n• "Galaxy mirror-glaze mousse cake"`;
+                    galleryHTML = thinking.outerHTML + galleryHTML;  // save to gallery
+                } else {
+                    thinking.textContent = "❌  Failed: " + (data?.status || "unknown error");
+                }
+            }catch(err){
+                thinking.textContent = "❌  Network error";
+                console.error(err);
+            }
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function appendMsg(txt,isAI){
+            const div=document.createElement('div');
+            div.className='msg'+(isAI?' ai':'');
+            div.textContent=txt;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            return div;
+        }
+
+        // Initialize the page to show orders tab by default
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('orders-tab').style.display = 'block';
+        });
+
+                function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = input.nextElementSibling;
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                input.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
+        }
+
+        // Handle password change form submission
+        document.getElementById('passwordChangeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const alertDiv = document.getElementById('passwordAlert');
+            
+            // Reset alert
+            alertDiv.style.display = 'none';
+            alertDiv.className = 'alert mt-3';
+            
+            // Validate passwords match
+            if (newPassword !== confirmPassword) {
+                showAlert('New passwords do not match', 'danger');
+                return;
+            }
+            
+            // Validate password length
+            if (newPassword.length < 6) {
+                showAlert('Password must be at least 6 characters', 'danger');
+                return;
+            }
+            
+            // Get current user
+            const user = auth.currentUser;
+            const credential = firebase.auth.EmailAuthProvider.credential(
+                user.email, 
+                currentPassword
+            );
+            
+            // Reauthenticate user
+            user.reauthenticateWithCredential(credential)
+                .then(() => {
+                    // Change password
+                    return user.updatePassword(newPassword);
+                })
+                .then(() => {
+                    showAlert('Password changed successfully!', 'success');
+                    document.getElementById('passwordChangeForm').reset();
+                })
+                .catch(error => {
+                    console.error('Error changing password:', error);
+                    let message = 'Error changing password';
+                    if (error.code === 'auth/wrong-password') {
+                        message = 'Current password is incorrect';
+                    } else if (error.code === 'auth/weak-password') {
+                        message = 'Password is too weak';
+                    }
+                    showAlert(message, 'danger');
+                });
+        });
+        
+        function showAlert(message, type) {
+            const alertDiv = document.getElementById('passwordAlert');
+            alertDiv.textContent = message;
+            alertDiv.classList.add(`alert-${type}`);
+            alertDiv.style.display = 'block';
+        }
+        
+    </script>
+</body>
+</html>

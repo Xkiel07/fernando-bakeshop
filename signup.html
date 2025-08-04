@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fernando's Bakeshop - Sign Up</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            padding: 20px;
+            color: #515151;
+        }
+        .signup-container {
+            max-width: 350px;
+            margin: 50px auto;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        .signup-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #515151;
+        }
+        .form-group label {
+            font-weight: normal;
+            margin-bottom: 5px;
+            color: #515151;
+        }
+        .form-control {
+            border-radius: 4px;
+            border: 1px solid #515151;
+            margin-bottom: 5px;
+            color: #515151;
+        }
+        .btn-signup {
+            width: 100%;
+            background-color: #515151;
+            color: white;
+            border-radius: 4px;
+            padding: 8px;
+            margin: 15px 0;
+            border: none;
+            font-weight: bold;
+        }
+        .btn-signup:hover {
+            background-color: #3a3a3a;
+        }
+        .login-link {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .login-link a {
+            color: #515151;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+        .social-buttons {
+            margin-top: 20px;
+        }
+        .btn-social {
+            width: 100%;
+            text-align: center;
+            padding: 8px 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid #515151;
+            background-color: white;
+            color: #515151;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        .btn-social:hover {
+            background-color: #f5f5f5;
+        }
+        .btn-social img {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+        }
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+            color: #515151;
+        }
+        .divider::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background-color: #515151;
+            z-index: -1;
+        }
+        .divider span {
+            background-color: white;
+            padding: 0 10px;
+        }
+        .terms-checkbox {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .terms-checkbox input {
+            margin-right: 8px;
+        }
+        .terms-text {
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+        .terms-text a {
+            color: #515151;
+            text-decoration: none;
+        }
+        .terms-text a:hover {
+            text-decoration: underline;
+        }
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-bottom: 10px;
+            display: none;
+        }
+        .success-message {
+            color: #28a745;
+            font-size: 14px;
+            margin-bottom: 10px;
+            display: none;
+        }
+        .password-strength {
+            height: 5px;
+            background-color: #eee;
+            margin-bottom: 15px;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .password-strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .password-hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: -10px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <h3 class="signup-title">Fernando's Bakeshop</h3>
+        
+        <div id="error-message" class="error-message"></div>
+        <div id="success-message" class="success-message"></div>
+        
+        <form id="signupForm">
+            <div class="form-group">
+                <label for="fullname">Full Name*</label>
+                <input type="text" class="form-control" id="fullname" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email Address*</label>
+                <input type="email" class="form-control" id="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password*</label>
+                <input type="password" class="form-control" id="password" required>
+                <div class="password-strength">
+                    <div id="password-strength-bar" class="password-strength-bar"></div>
+                </div>
+                <div class="password-hint">Use at least 8 characters with a mix of letters, numbers & symbols</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirm-password">Confirm Password*</label>
+                <input type="password" class="form-control" id="confirm-password" required>
+            </div>
+            
+            <div class="terms-checkbox">
+                <input type="checkbox" id="terms" required>
+                <label for="terms">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></label>
+            </div>
+            
+            <div class="terms-text">
+                By creating an account, you agree to Fernando's Bakeshop's Terms of Service and Privacy Policy, 
+                and consent to receive marketing communications from Fernando's Bakeshop. You may unsubscribe at any time.
+            </div>
+            
+            <button type="submit" class="btn btn-signup">Create Account</button>
+        </form>
+        
+        <div class="login-link">
+            <p>Already have an account?<br><a href="login.html">Log in</a></p>
+        </div>
+        
+        <div class="divider">
+            <span>or</span>
+        </div>
+        
+        <div class="social-buttons">
+            <button class="btn-social" id="google-signup">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google logo">
+                Continue with Google
+            </button>
+            <button class="btn-social" id="facebook-signup">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg" alt="Facebook logo">
+                Continue with Facebook
+            </button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    
+    <script>
+        // Firebase configuration (must match your login page config)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBD3OmV59vJXzEP_il3WYOQnnFPGvlFIbI",
+            authDomain: "fernandodb-65186.firebaseapp.com",
+            projectId: "fernandodb-65186",
+            storageBucket: "fernandodb-65186.firebasestorage.app",
+            messagingSenderId: "849534271253",
+            appId: "1:849534271253:web:d436b46feab2070f6cb31c",
+            measurementId: "G-VB1FG2EHR3"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // DOM elements
+        const signupForm = document.getElementById('signupForm');
+        const googleSignupBtn = document.getElementById('google-signup');
+        const facebookSignupBtn = document.getElementById('facebook-signup');
+        const errorMessage = document.getElementById('error-message');
+        const successMessage = document.getElementById('success-message');
+        const passwordInput = document.getElementById('password');
+        const passwordStrengthBar = document.getElementById('password-strength-bar');
+        const confirmPasswordInput = document.getElementById('confirm-password');
+
+        // Password strength indicator
+        passwordInput.addEventListener('input', function() {
+            const strength = calculatePasswordStrength(this.value);
+            updatePasswordStrengthBar(strength);
+        });
+
+        function calculatePasswordStrength(password) {
+            let strength = 0;
+            
+            // Length check
+            if (password.length >= 8) strength += 1;
+            if (password.length >= 12) strength += 1;
+            
+            // Character variety checks
+            if (/[A-Z]/.test(password)) strength += 1; // Uppercase letters
+            if (/[a-z]/.test(password)) strength += 1; // Lowercase letters
+            if (/[0-9]/.test(password)) strength += 1; // Numbers
+            if (/[^A-Za-z0-9]/.test(password)) strength += 1; // Special chars
+            
+            return Math.min(strength, 5); // Cap at 5 for our meter
+        }
+
+        function updatePasswordStrengthBar(strength) {
+            const colors = ['#dc3545', '#ff6b6b', '#ffc107', '#7bc043', '#28a745'];
+            const percentages = ['20%', '40%', '60%', '80%', '100%'];
+            
+            passwordStrengthBar.style.width = percentages[strength - 1] || '0%';
+            passwordStrengthBar.style.backgroundColor = colors[strength - 1] || '#dc3545';
+        }
+
+        // Form submission handler
+        signupForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const fullName = document.getElementById('fullname').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const termsAccepted = document.getElementById('terms').checked;
+            
+            // Validation
+            if (!fullName || !email || !password || !confirmPassword) {
+                showError('Please fill in all required fields.');
+                return;
+            }
+            
+            if (!termsAccepted) {
+                showError('You must accept the terms and conditions.');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showError('Passwords do not match.');
+                return;
+            }
+            
+            if (password.length < 8) {
+                showError('Password must be at least 8 characters long.');
+                return;
+            }
+            
+            // Create user with email and password
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // Signed in 
+                    const user = userCredential.user;
+                    
+                    // Update user profile with display name
+                    return user.updateProfile({
+                        displayName: fullName
+                    });
+                })
+                .then(() => {
+                    // Send email verification
+                    return auth.currentUser.sendEmailVerification();
+                })
+                .then(() => {
+                    showSuccess('Account created successfully! Please check your email for verification.');
+                    // Clear form
+                    signupForm.reset();
+                    passwordStrengthBar.style.width = '0%';
+                    
+                    // Optionally redirect after delay
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 3000);
+                })
+                .catch((error) => {
+                    handleAuthError(error);
+                });
+        });
+
+        // Google signup handler
+        googleSignupBtn.addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    // Successful signup/login
+                    showSuccess('Google signup successful! Redirecting...');
+                    setTimeout(() => {
+                        window.location.href = 'Home.html';
+                    }, 1500);
+                })
+                .catch((error) => {
+                    handleAuthError(error);
+                });
+        });
+
+        // Facebook signup handler
+        facebookSignupBtn.addEventListener('click', () => {
+            const provider = new firebase.auth.FacebookAuthProvider();
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    // Successful signup/login
+                    showSuccess('Facebook signup successful! Redirecting...');
+                    setTimeout(() => {
+                        window.location.href = 'Home.html';
+                    }, 1500);
+                })
+                .catch((error) => {
+                    handleAuthError(error);
+                });
+        });
+
+        // Helper functions
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+        }
+
+        function handleAuthError(error) {
+            let errorMessage = '';
+            
+            switch (error.code) {
+                case 'auth/invalid-email':
+                    errorMessage = 'Invalid email address.';
+                    break;
+                case 'auth/email-already-in-use':
+                    errorMessage = 'Email already in use. Please log in instead.';
+                    break;
+                case 'auth/weak-password':
+                    errorMessage = 'Password should be at least 6 characters.';
+                    break;
+                case 'auth/operation-not-allowed':
+                    errorMessage = 'This operation is not allowed.';
+                    break;
+                case 'auth/account-exists-with-different-credential':
+                    errorMessage = 'An account already exists with the same email but different sign-in credentials.';
+                    break;
+                case 'auth/popup-closed-by-user':
+                    // User closed the popup, no need to show error
+                    return;
+                default:
+                    errorMessage = 'An error occurred. Please try again.';
+                    console.error(error);
+            }
+            
+            showError(errorMessage);
+        }
+
+        // Check if user is already logged in
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // User is signed in, redirect to dashboard
+                window.location.href = 'dashboard.html';
+            }
+        });
+    </script>
+</body>
+</html>

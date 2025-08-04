@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <style>
+        :root {
+            --primary: #4a6fa5;
+            --secondary: #6c757d;
+            --success: #28a745;
+            --danger: #dc3545;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --border: #dee2e6;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+            color: #212529;
+        }
+        
+        .navbar {
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .user-role {
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .role-admin {
+            background-color: #e2f0fd;
+            color: var(--primary);
+        }
+        
+        .role-rider {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .role-user {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .admin-panel {
+            display: none;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-top: 1rem;
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .panel-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+        }
+        
+        .stat-title {
+            font-size: 0.9rem;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        th {
+            background-color: var(--light);
+            font-weight: 600;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.3rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .rider-dashboard, .user-dashboard {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-top: 1rem;
+            text-align: center;
+        }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 0.3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .alert-info {
+            background-color: #e2f0fd;
+            color: var(--primary);
+        }
+        
+        .delivery-status {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+        }
+        
+        .delivery-progress {
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary);
+            width: 0%;
+            transition: width 0.5s;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">Fernando's Bakeshop</div>
+        <div class="user-info">
+            <span id="username">Loading...</span>
+            <span id="user-role" class="user-role">Loading...</span>
+            <button id="logoutBtn" class="btn btn-primary btn-sm">Logout</button>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <!-- Admin Panel (only shown to admins) -->
+        <div id="admin-panel" class="admin-panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Admin Dashboard</h2>
+                <button class="btn btn-primary" id="refreshData">Refresh Data</button>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-title">Total Users</div>
+                    <div class="stat-value" id="total-users">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Active Today</div>
+                    <div class="stat-value" id="active-users">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">New Orders</div>
+                    <div class="stat-value" id="new-orders">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Revenue</div>
+                    <div class="stat-value" id="revenue">$0</div>
+                </div>
+            </div>
+            
+            <h3>Recent Activity</h3>
+            <div class="table-container">
+                <table id="activity-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activity-body">
+                        <!-- Will be populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Rider Dashboard (only shown to riders) -->
+        <div id="rider-dashboard" class="rider-dashboard">
+            <h2>Rider Dashboard</h2>
+            <p>Your delivery assignments</p>
+            <div class="alert alert-info" id="rider-alert">
+                Loading your deliveries...
+            </div>
+            <div id="deliveries-container">
+                <!-- Will be populated dynamically -->
+            </div>
+        </div>
+        
+        <!-- User Dashboard (shown to regular users) -->
+        <div id="user-dashboard" class="user-dashboard">
+            <h2>Your Orders</h2>
+            <div class="delivery-status">
+                <h3>Order Status</h3>
+                <div id="user-order-status">Loading your order status...</div>
+                <div class="delivery-progress">
+                    <div class="progress-bar" id="delivery-progress"></div>
+                </div>
+                <div id="delivery-estimate">Estimated delivery time: calculating...</div>
+            </div>
+            <button class="btn btn-primary" id="refreshOrderStatus">Refresh Status</button>
+        </div>
+        
+        <!-- Access Denied Message -->
+        <div id="access-denied" class="user-dashboard" style="display: none;">
+            <h2>Access Denied</h2>
+            <p>You don't have permission to access this page.</p>
+            <p>Please contact your administrator if you believe this is an error.</p>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBD3OmV59vJXzEP_il3WYOQnnFPGvlFIbI",
+            authDomain: "fernandodb-65186.firebaseapp.com",
+            databaseURL: "https://fernandodb-65186-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "fernandodb-65186",
+            storageBucket: "fernandodb-65186.appspot.com",
+            messagingSenderId: "849534271253",
+            appId: "1:849534271253:web:d436b46feab2070f6cb31c",
+            measurementId: "G-VB1FG2EHR3"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        // DOM elements
+        const adminPanel = document.getElementById('admin-panel');
+        const riderDashboard = document.getElementById('rider-dashboard');
+        const userDashboard = document.getElementById('user-dashboard');
+        const accessDenied = document.getElementById('access-denied');
+        const usernameSpan = document.getElementById('username');
+        const userRoleSpan = document.getElementById('user-role');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const refreshDataBtn = document.getElementById('refreshData');
+        const refreshOrderStatusBtn = document.getElementById('refreshOrderStatus');
+
+        // Check authentication state
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // User is signed in
+                usernameSpan.textContent = user.email;
+                
+                // Check user role in database
+                checkUserRole(user.uid).then((role) => {
+                    userRoleSpan.textContent = role;
+                    
+                    switch(role) {
+                        case 'admin':
+                            userRoleSpan.className = 'user-role role-admin';
+                            adminPanel.style.display = 'block';
+                            riderDashboard.style.display = 'none';
+                            userDashboard.style.display = 'none';
+                            accessDenied.style.display = 'none';
+                            loadAdminData();
+                            break;
+                        case 'rider':
+                            userRoleSpan.className = 'user-role role-rider';
+                            adminPanel.style.display = 'none';
+                            riderDashboard.style.display = 'block';
+                            userDashboard.style.display = 'none';
+                            accessDenied.style.display = 'none';
+                            loadRiderData(user.uid);
+                            break;
+                        case 'user':
+                            userRoleSpan.className = 'user-role role-user';
+                            adminPanel.style.display = 'none';
+                            riderDashboard.style.display = 'none';
+                            userDashboard.style.display = 'block';
+                            accessDenied.style.display = 'none';
+                            loadUserData(user.uid);
+                            break;
+                        default:
+                            accessDenied.style.display = 'block';
+                    }
+                });
+            } else {
+                // User is signed out
+                window.location.href = 'login.html';
+            }
+        });
+
+        // Check user role in Realtime Database
+        function checkUserRole(uid) {
+            return database.ref('users/' + uid + '/role').once('value')
+                .then((snapshot) => {
+                    return snapshot.val() || 'user'; // Default to 'user' if role not set
+                })
+                .catch((error) => {
+                    console.error("Error checking user role:", error);
+                    return 'user'; // Default to 'user' on error
+                });
+        }
+
+        // Load data for admin dashboard
+        function loadAdminData() {
+            // Load user count
+            database.ref('users').once('value').then((snapshot) => {
+                document.getElementById('total-users').textContent = snapshot.numChildren();
+            });
+            
+            // Load orders count
+            database.ref('orders').orderByChild('timestamp').limitToLast(1).once('value').then((snapshot) => {
+                document.getElementById('new-orders').textContent = snapshot.numChildren();
+            });
+            
+            // Load recent activity
+            database.ref('activity').limitToLast(5).once('value').then((snapshot) => {
+                const activityBody = document.getElementById('activity-body');
+                activityBody.innerHTML = '';
+                
+                snapshot.forEach((childSnapshot) => {
+                    const activity = childSnapshot.val();
+                    const row = document.createElement('tr');
+                    
+                    row.innerHTML = `
+                        <td>${childSnapshot.key}</td>
+                        <td>${activity.userEmail || 'N/A'}</td>
+                        <td>${activity.action || 'N/A'}</td>
+                        <td>${formatTime(activity.timestamp)}</td>
+                        <td>${activity.status || 'N/A'}</td>
+                        <td><button class="btn btn-primary btn-sm">View</button></td>
+                    `;
+                    
+                    activityBody.appendChild(row);
+                });
+            });
+        }
+
+        // Load data for rider dashboard
+        function loadRiderData(riderId) {
+            database.ref('deliveries').orderByChild('riderId').equalTo(riderId).once('value').then((snapshot) => {
+                const deliveriesContainer = document.getElementById('deliveries-container');
+                deliveriesContainer.innerHTML = '';
+                
+                if (snapshot.numChildren() === 0) {
+                    document.getElementById('rider-alert').textContent = 'You have no deliveries assigned.';
+                    return;
+                }
+                
+                document.getElementById('rider-alert').textContent = `You have ${snapshot.numChildren()} deliveries assigned.`;
+                
+                snapshot.forEach((childSnapshot) => {
+                    const delivery = childSnapshot.val();
+                    const deliveryCard = document.createElement('div');
+                    deliveryCard.className = 'delivery-status';
+                    
+                    deliveryCard.innerHTML = `
+                        <h4>Delivery #${childSnapshot.key}</h4>
+                        <p>Customer: ${delivery.customerName || 'N/A'}</p>
+                        <p>Address: ${delivery.deliveryAddress || 'N/A'}</p>
+                        <p>Status: ${delivery.status || 'Pending'}</p>
+                        <div class="delivery-progress">
+                            <div class="progress-bar" style="width: ${getProgressWidth(delivery.status)}"></div>
+                        </div>
+                        <button class="btn btn-primary btn-sm update-delivery" data-id="${childSnapshot.key}">Update Status</button>
+                    `;
+                    
+                    deliveriesContainer.appendChild(deliveryCard);
+                });
+            });
+        }
+
+        // Load data for user dashboard
+        function loadUserData(userId) {
+            database.ref('orders').orderByChild('userId').equalTo(userId).limitToLast(1).once('value').then((snapshot) => {
+                const orderStatusDiv = document.getElementById('user-order-status');
+                const progressBar = document.getElementById('delivery-progress');
+                const deliveryEstimate = document.getElementById('delivery-estimate');
+                
+                if (snapshot.numChildren() === 0) {
+                    orderStatusDiv.textContent = 'You have no recent orders.';
+                    progressBar.style.width = '0%';
+                    deliveryEstimate.textContent = '';
+                    return;
+                }
+                
+                snapshot.forEach((childSnapshot) => {
+                    const order = childSnapshot.val();
+                    orderStatusDiv.textContent = `Order #${childSnapshot.key} - ${order.status || 'Processing'}`;
+                    progressBar.style.width = getProgressWidth(order.status);
+                    
+                    if (order.estimatedDelivery) {
+                        const deliveryTime = new Date(order.estimatedDelivery);
+                        deliveryEstimate.textContent = `Estimated delivery time: ${deliveryTime.toLocaleString()}`;
+                    } else {
+                        deliveryEstimate.textContent = 'Estimated delivery time: calculating...';
+                    }
+                });
+            });
+        }
+
+        // Helper function to format timestamp
+        function formatTime(timestamp) {
+            if (!timestamp) return 'N/A';
+            return new Date(timestamp).toLocaleString();
+        }
+
+        // Helper function to get progress width based on status
+        function getProgressWidth(status) {
+            switch(status) {
+                case 'Preparing': return '25%';
+                case 'Baking': return '50%';
+                case 'Out for Delivery': return '75%';
+                case 'Delivered': return '100%';
+                default: return '10%';
+            }
+        }
+
+        // Logout button
+        logoutBtn.addEventListener('click', () => {
+            auth.signOut().then(() => {
+                window.location.href = 'login.html';
+            });
+        });
+
+        // Refresh data buttons
+        refreshDataBtn?.addEventListener('click', () => {
+            loadAdminData();
+        });
+
+        refreshOrderStatusBtn?.addEventListener('click', () => {
+            const user = auth.currentUser;
+            if (user) {
+                loadUserData(user.uid);
+            }
+        });
+
+        // Handle delivery status updates
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('update-delivery')) {
+                const deliveryId = e.target.getAttribute('data-id');
+                updateDeliveryStatus(deliveryId);
+            }
+        });
+
+        function updateDeliveryStatus(deliveryId) {
+            // In a real app, you would show a dialog to select status
+            const newStatus = prompt('Enter new status (Preparing, Baking, Out for Delivery, Delivered):');
+            
+            if (newStatus) {
+                database.ref('deliveries/' + deliveryId + '/status').set(newStatus)
+                    .then(() => {
+                        alert('Delivery status updated successfully!');
+                        const user = auth.currentUser;
+                        if (user) {
+                            loadRiderData(user.uid);
+                        }
+                    })
+                    .catch((error) => {
+                        alert('Error updating delivery status: ' + error.message);
+                    });
+            }
+        }
+    </script>
+</body>
+</html>

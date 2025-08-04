@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <title>Fernando's Bakeshop</title>
+    <style>
+        .container-fluid {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        .bg-peach {
+            background-color: #fad0b4 !important;
+        }
+        .bg-cblue {
+            background-color: #778eec !important;
+        }
+        .primc {
+            color: #403730 !important;
+        }
+        .sec {
+            color: #403730 !important;
+        }
+        .br20 {
+            border-radius: 20px;
+        }
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .product-section {
+            margin-top: 50px;
+        }
+        .section-button {
+            margin-top: 30px;
+            text-align: center;
+        }
+        footer {
+            background-color: #f8f9fa;
+            padding: 20px 0;
+            text-align: center;
+            margin-top: 50px;
+        }
+        .product-card {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 10px;
+            border-radius: 20px;
+            height: 100%;
+            transition: transform 0.3s;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .product-img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 15px;
+            margin-bottom: 15px;
+        }
+        .about-img {
+            max-height: 400px;
+            width: 100%;
+            object-fit: cover;
+        }
+        .checklist-item {
+            margin-bottom: 10px;
+        }
+        .checklist-item .icon {
+            color: #778eec;
+            margin-right: 10px;
+        }
+        .protected-feature {
+            cursor: pointer;
+        }
+        .message-icon {
+            position: relative;
+            margin-right: 15px;
+            font-size: 1.5rem;
+            color: #403730;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        .message-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #ff4d4d;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .nav-menu-center {
+            margin-left: auto;
+            margin-right: auto;
+            left: 0;
+            right: 0;
+            position: absolute;
+            width: fit-content;
+        }
+        .auth-section {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+        }
+        .navbar-nav {
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <nav class="navbar navbar-expand-lg navbar-light bg-peach pl-5 pr-5 p-3">
+            <a class="navbar-brand" href="index.html">
+                <img src="/image/valir.jpg" width="50" height="50" class="rounded-circle" />
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMenu">
+                <ul class="navbar-nav nav-menu-center">
+                    <li class="nav-item active">
+                        <a class="nav-link primc h5" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link primc h5" href="#">Shop</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link primc h5" href="#">Cakes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link primc h5" href="#about">About</a>
+                    </li>
+                </ul>
+                <div class="auth-section">
+                    <div id="message-icon" class="message-icon d-none">
+                        <i class="fas fa-envelope"></i>
+                        <span id="message-badge" class="message-badge d-none">0</span>
+                    </div>
+                    <button id="logout-btn" class="btn bg-cblue br20 d-none">Logout</button>
+                    <button id="login-btn" class="btn bg-cblue br20">Login</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Rest of your HTML content remains the same -->
+        <div class="main-content">
+            <!-- Hero Section -->
+            <div class="container p-5">
+                <div class="row align-items-center">
+                    <div class="col-md-6 text-center text-md-left p-5">
+                        <h1 class="mb-4"><strong>Fernando's Bakeshop</strong></h1>
+                        <h3 class="mb-4">Freshly Baked Goods Daily</h3>
+                        <h3 class="mb-4"><strong>Since 1985</strong></h3>
+                        <button class="btn bg-cblue btn-lg br20 protected-feature">TRY OUR AI</button>
+                    </div>
+                    <div class="col-md-6 text-center">
+                        <img src="/image/valir.jpg" class="img-fluid rounded" style="max-width: 500px; height: auto;" alt="Bakery Showcase" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sample Cakes Section -->
+            <div class="container product-section p-5">
+                <h2 class="text-center mb-5">Fernando's Sample Cakes</h2>
+                <div class="row justify-content-center">
+                    <!-- Column 1 -->
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                        <div class="product-card">
+                            <img src="/image/valir.jpg" class="product-img" alt="Artisan Bread" />
+                            <h4 class="mt-3 text-center"><strong>Artisan Bread</strong></h4>
+                            <p class="text-center">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Column 2 -->
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                        <div class="product-card">
+                            <img src="/image/valir.jpg" class="product-img" alt="Special Bread" />
+                            <h4 class="mt-3 text-center"><strong>Special Bread</strong></h4>
+                            <p class="text-center">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Column 3 -->
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                        <div class="product-card">
+                            <img src="/image/valir.jpg" class="product-img" alt="Pastries" />
+                            <h4 class="mt-3 text-center"><strong>Pastries</strong></h4>
+                            <p class="text-center">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Column 4 -->
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                        <div class="product-card">
+                            <img src="/image/valir.jpg" class="product-img" alt="Custom Cakes" />
+                            <h4 class="mt-3 text-center"><strong>Custom Cakes</strong></h4>
+                            <p class="text-center">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-button">
+                    <button class="btn bg-cblue btn-lg br20 px-5 protected-feature">View All Sample Cakes</button>
+                </div>
+            </div>
+
+            <!-- Favorites Section -->
+            <div class="container product-section p-5">
+                <h2 class="text-center mb-5">Fernando's Favorite Cakes</h2>
+                <div class="row justify-content-center">
+                    <!-- Column 1 -->
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                        <div class="product-card">
+                            <img src="/image/valir.jpg" class="product-img" alt="Artisan Bread" />
+                            <h4 class="mt-3 text-center"><strong>Artisan Bread</strong></h4>
+                            <p class="text-center">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Column 2 -->
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                        <div class="product-card">
+                            <img src="/image/valir.jpg" class="product-img" alt="Special Bread" />
+                            <h4 class="mt-3 text-center"><strong>Special Bread</strong></h4>
+                            <p class="text-center">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Column 3 -->
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                        <div class="product-card">
+                            <img src="/image/valir.jpg" class="product-img" alt="Pastries" />
+                            <h4 class="mt-3 text-center"><strong>Pastries</strong></h4>
+                            <p class="text-center">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Column 4 -->
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                        <div class="product-card">
+                            <img src="/image/valir.jpg" class="product-img" alt="Custom Cakes" />
+                            <h4 class="mt-3 text-center"><strong>Custom Cakes</strong></h4>
+                            <p class="text-center">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-button">
+                    <button class="btn bg-cblue btn-lg br20 px-5 protected-feature">View All Favorite Cakes</button>
+                </div>
+            </div>
+
+            <!-- About Section -->
+            <div id="about" class="container product-section p-5 border br20">
+                <h2 class="text-center mb-5">About Us</h2>
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <img src="/image/valir.jpg" class="img-fluid rounded about-img" alt="Our Bakery" />
+                    </div>
+                    <div class="col-md-6">
+                        <h3 class="mb-4"><strong>Our Philosophy</strong></h3>
+                        <p class="mb-4">We believe in the art of baking - combining time-honored techniques with creative innovation. Every product that leaves our oven carries the love and dedication of our bakers.</p>
+                        
+                        <div class="mt-4">
+                            <h4><strong>Our Essentials</strong></h4>
+                            <div class="checklist-item">
+                                <span class="icon">✓</span> Your color, clothing, makeup style
+                            </div>
+                            <div class="checklist-item">
+                                <span class="icon">✓</span> Our essence - quality and tradition
+                            </div>
+                            <div class="checklist-item">
+                                <span class="icon">✓</span> Life's strong degree - resilience in every bake
+                            </div>
+                        </div>
+                        
+                        <button class="btn bg-cblue btn-lg br20 mt-4 protected-feature">Meet Our Team</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2023 - Fernando's Bakeshop</p>
+        </footer>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBD3OmV59vJXzEP_il3WYOQnnFPGvlFIbI",
+            authDomain: "fernandodb-65186.firebaseapp.com",
+            projectId: "fernandodb-65186",
+            storageBucket: "fernandodb-65186.appspot.com",
+            messagingSenderId: "849534271253",
+            appId: "1:849534271253:web:d436b46feab2070f6cb31c",
+            measurementId: "G-VB1FG2EHR3"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        // DOM elements
+        const logoutBtn = document.getElementById('logout-btn');
+        const loginBtn = document.getElementById('login-btn');
+        const messageIcon = document.getElementById('message-icon');
+        const messageBadge = document.getElementById('message-badge');
+
+        // Check auth state
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // User is signed in
+                loginBtn.classList.add('d-none');
+                logoutBtn.classList.remove('d-none');
+                messageIcon.classList.remove('d-none');
+                
+                // Setup messaging
+                setupMessaging(user.uid);
+            } else {
+                // User is signed out
+                loginBtn.classList.remove('d-none');
+                logoutBtn.classList.add('d-none');
+                messageIcon.classList.add('d-none');
+            }
+        });
+
+        // Setup Firebase messaging
+        function setupMessaging(userId) {
+            const messagesRef = database.ref('messages/' + userId);
+            
+            // Listen for new messages
+            messagesRef.on('value', (snapshot) => {
+                const messages = snapshot.val();
+                let unreadCount = 0;
+                
+                if (messages) {
+                    // Count unread messages
+                    Object.values(messages).forEach(message => {
+                        if (!message.read) unreadCount++;
+                    });
+                }
+                
+                // Update badge
+                if (unreadCount > 0) {
+                    messageBadge.textContent = unreadCount;
+                    messageBadge.classList.remove('d-none');
+                } else {
+                    messageBadge.classList.add('d-none');
+                }
+            });
+            
+            // Message icon click handler
+            messageIcon.addEventListener('click', () => {
+                // Here you would typically show a messages modal or navigate to a messages page
+                alert('Messages feature would open here. You have ' + (messageBadge.textContent || '0') + ' unread messages.');
+                
+                // Mark messages as read when opened
+                messagesRef.once('value').then((snapshot) => {
+                    const messages = snapshot.val();
+                    if (messages) {
+                        Object.keys(messages).forEach(messageId => {
+                            if (!messages[messageId].read) {
+                                messagesRef.child(messageId).update({ read: true });
+                            }
+                        });
+                    }
+                });
+            });
+        }
+
+        // Logout handler
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            auth.signOut()
+                .then(() => {
+                    // Redirect to home page after successful logout
+                    window.location.href = 'index.html';
+                })
+                .catch((error) => {
+                    console.error('Logout error:', error);
+                    alert('Error signing out. Please try again.');
+                });
+        });
+
+        // Login handler
+        loginBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.location.href = 'login.html';
+        });
+
+        // Protected features handler
+        document.querySelectorAll('.protected-feature').forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (!auth.currentUser) {
+                    e.preventDefault();
+                    alert('Please login to access this feature');
+                    window.location.href = 'login.html';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

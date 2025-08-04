@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rider Dashboard - Fernando's Bakeshop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #515151;
+            --accent: #4e73df;
+            --light: #f8f9fa;
+            --danger: #e74a3b;
+            --warning: #f6c23e;
+            --success: #1cc88a;
+            --info: #36b9cc;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
+        .sidebar {
+            background-color: var(--primary);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            width: 250px;
+            padding-top: 20px;
+            transition: width 0.3s;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        .sidebar a {
+            color: white;
+            padding: 10px 15px;
+            display: block;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .sidebar a:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        .sidebar a.active {
+            background-color: var(--accent);
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            transition: margin-left 0.3s;
+        }
+        
+        /* Rider Status Styles */
+        .rider-status-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .rider-status-badge {
+            display: inline-block;
+            padding: 0.35em 0.65em;
+            border-radius: 0.25rem;
+            font-weight: 600;
+        }
+        .rider-online {
+            background-color: var(--success);
+            color: white;
+        }
+        .rider-offline {
+            background-color: var(--danger);
+            color: white;
+        }
+        .rider-status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .rider-status-online {
+            background-color: var(--success);
+        }
+        .rider-status-offline {
+            background-color: var(--danger);
+        }
+        
+        /* Order Status Styles */
+        .order-status-badge {
+            display: inline-block;
+            padding: 0.35em 0.65em;
+            border-radius: 0.25rem;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+        .status-ready {
+            background-color: var(--accent);
+            color: white;
+        }
+        .status-out-for-delivery {
+            background-color: var(--warning);
+            color: #000;
+        }
+        .status-delivered {
+            background-color: var(--success);
+            color: white;
+        }
+        .status-failed {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        /* Delivery Card Styles */
+        .delivery-card {
+            transition: all 0.3s;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+        .delivery-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        /* Proof Upload Styles */
+        .proof-upload-container {
+            margin-top: 15px;
+            padding: 15px;
+            border: 1px dashed #ddd;
+            border-radius: 5px;
+            text-align: center;
+        }
+        #proofImagePreview {
+            max-width: 100%;
+            max-height: 200px;
+            display: none;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="text-center mb-4">
+            <h4>Fernando's Bakeshop</h4>
+            <hr>
+        </div>
+        <a href="#" class="active"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a>
+        <a href="#"><i class="fas fa-motorcycle me-2"></i> My Deliveries</a>
+        <a href="#"><i class="fas fa-history me-2"></i> History</a>
+        <a href="#"><i class="fas fa-user me-2"></i> Profile</a>
+        <div class="mt-4 pt-4 border-top">
+            <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt me-2"></i> Logout</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0 text-gray-800">Delivery Dashboard</h1>
+                <div class="rider-status-container">
+                    <span id="riderStatusIndicator">
+                        <span class="rider-status-indicator rider-status-online"></span>
+                        <span class="rider-status-badge rider-online">Online</span>
+                    </span>
+                    <button class="btn btn-outline-danger" id="toggleStatusBtn">
+                        <i class="fas fa-toggle-on me-1"></i> Go Offline
+                    </button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Assigned Deliveries</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="assignedCount">0</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        In Transit</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="inTransitCount">0</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-motorcycle fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        Completed Today</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="completedCount">0</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Earnings (Today)</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="earningsCount">$0.00</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">My Active Deliveries</h6>
+                    <button class="btn btn-sm btn-primary" id="refreshDeliveriesBtn">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="deliveriesTable">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Items</th>
+                                    <th>Amount</th>
+                                    <th>Delivery Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="deliveriesTableBody">
+                                <!-- Deliveries will be loaded here -->
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                        <i class="fas fa-box-open fa-3x mb-3"></i>
+                                        <p>No deliveries assigned</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delivery Details Modal -->
+    <div class="modal fade" id="deliveryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deliveryModalTitle">Delivery Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="deliveryDetails">
+                    <!-- Details will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <div class="status-actions" id="statusActions">
+                        <!-- Status buttons will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delivery Proof Modal -->
+    <div class="modal fade" id="proofModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Upload Delivery Proof</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="proof-upload-container">
+                        <p>Please upload proof of delivery (photo of delivered items)</p>
+                        <input type="file" id="proofUpload" accept="image/*" capture="environment" required>
+                        <img id="proofImagePreview" alt="Proof preview">
+                    </div>
+                    <div class="form-group mt-3">
+                        <label for="deliveryNotes">Delivery Notes</label>
+                        <textarea class="form-control" id="deliveryNotes" rows="3" placeholder="Any additional notes about the delivery"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="submitProofBtn">Submit Proof</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
+
+    <script>
+// Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBD3OmV59vJXzEP_il3WYOQnnFPGvlFIbI",
+            authDomain: "fernandodb-65186.firebaseapp.com",
+            projectId: "fernandodb-65186",
+            storageBucket: "fernandodb-65186.appspot.com",
+            messagingSenderId: "849534271253",
+            appId: "1:849534271253:web:d436b46feab2070f6cb31c",
+            measurementId: "G-VB1FG2EHR3"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        const storage = firebase.storage();
+
+        // DOM Elements
+        const deliveriesTableBody = document.getElementById('deliveriesTableBody');
+        const assignedCount = document.getElementById('assignedCount');
+        const inTransitCount = document.getElementById('inTransitCount');
+        const completedCount = document.getElementById('completedCount');
+        const earningsCount = document.getElementById('earningsCount');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const toggleStatusBtn = document.getElementById('toggleStatusBtn');
+        const riderStatusIndicator = document.getElementById('riderStatusIndicator');
+        const refreshDeliveriesBtn = document.getElementById('refreshDeliveriesBtn');
+        const proofUpload = document.getElementById('proofUpload');
+        const proofImagePreview = document.getElementById('proofImagePreview');
+        const submitProofBtn = document.getElementById('submitProofBtn');
+
+        // Current rider and state
+        let currentRider = {
+            id: null,
+            riderId: null,
+            name: "Rider",
+            status: "online"
+        };
+        let currentOrderId = null;
+        let proofFile = null;
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            initFirebaseAuth();
+            setupEventListeners();
+        });
+
+        function initFirebaseAuth() {
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    loadRiderProfile(user.uid);
+                } else {
+                    window.location.href = 'login.html';
+                }
+            });
+        }
+
+        async function loadRiderProfile(userId) {
+            try {
+                const riderDoc = await db.collection('users').doc(userId).get();
+                
+                if (!riderDoc.exists) throw new Error("Rider document not found");
+                if (riderDoc.data().role !== 'rider') throw new Error("User is not a rider");
+
+                currentRider = {
+                    id: userId,
+                    riderId: riderDoc.data().riderId || "RIDER-001",
+                    name: riderDoc.data().name || "Rider",
+                    status: riderDoc.data().riderStatus || "online",
+                    email: riderDoc.data().email || "",
+                    phone: riderDoc.data().phone || "",
+                    vehicleType: riderDoc.data().vehicleType || "",
+                    vehiclePlate: riderDoc.data().vehiclePlate || ""
+                };
+
+                updateRiderStatusUI();
+                loadDeliveries();
+                calculateDashboardStats();
+            } catch (error) {
+                console.error("Error loading rider profile:", error);
+                alert("Error loading rider data. Please try again.");
+                setTimeout(() => window.location.href = 'login.html', 3000);
+            }
+        }
+
+        // FIXED: Main function to load deliveries with proper query
+        async function loadDeliveries() {
+            try {
+                // Query orders assigned to this rider with status 'ready' or 'out-for-delivery'
+                const query = db.collection('orders')
+                    .where('riderId', '==', currentRider.riderId)
+                    .where('status', 'in', ['ready', 'out-for-delivery'])
+                    .orderBy('assignedAt', 'desc');
+
+                const snapshot = await query.get();
+                
+                if (snapshot.empty) {
+                    showNoDeliveriesMessage();
+                    return;
+                }
+
+                // Clear existing table rows
+                deliveriesTableBody.innerHTML = '';
+                
+                // Counters for dashboard
+                let assigned = 0;
+                let inTransit = 0;
+
+                snapshot.forEach(doc => {
+                    const delivery = doc.data();
+                    const status = delivery.status;
+                    
+                    if (status === 'ready') assigned++;
+                    if (status === 'out-for-delivery') inTransit++;
+                    
+                    addDeliveryToTable(delivery, doc.id);
+                });
+
+                // Update counters
+                assignedCount.textContent = assigned;
+                inTransitCount.textContent = inTransit;
+
+            } catch (error) {
+                console.error("Error loading deliveries:", error);
+                showNoDeliveriesMessage("Error loading deliveries. Please try again.");
+                
+                if (error.code === 'failed-precondition') {
+                    // Help admin create the needed index
+                    const indexUrl = `https://console.firebase.google.com/project/${firebaseConfig.projectId}/database/firestore/indexes?create_composite=ClZwcm9qZWN0cy9mZXJuYW5kb2RiLTY1MTg2L2RhdGFiYXNlcy8oZGVmYXVsdCkvY29sbGVjdGlvbkdyb3Vwcy9vcmRlcnMvaW5kZXhlcy9fEAEaDAoIcmFkZXJJZBABGgwKBnN0YXR1cxABGhAKCmFzc2lnbmVkQXQQAhoMGAAqDHRpbWVzIEFzY2VuZA`;
+                    console.error("Create composite index at:", indexUrl);
+                    alert("Missing Firestore index. Please contact admin to create the required index.");
+                }
+            }
+        }
+
+        function showNoDeliveriesMessage(message = "No active deliveries assigned to you") {
+            deliveriesTableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center py-4 text-muted">
+                        <i class="fas fa-box-open fa-3x mb-3"></i>
+                        <p>${message}</p>
+                    </td>
+                </tr>`;
+            assignedCount.textContent = '0';
+            inTransitCount.textContent = '0';
+        }
+
+        function addDeliveryToTable(delivery, deliveryId) {
+            const deliveryDate = delivery.deliveryDate?.toDate() || delivery.createdAt.toDate();
+            const formattedDate = deliveryDate.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>#${deliveryId.substring(0, 8)}</td>
+                <td>${delivery.customerName || delivery.customerEmail}</td>
+                <td>${delivery.items?.map(i => `${i.size} ${i.flavor}`).join(', ') || 'Cake Order'}</td>
+                <td>$${(delivery.totalPrice || 0).toFixed(2)}</td>
+                <td>${formattedDate}</td>
+                <td>${getOrderStatusBadge(delivery.status)}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary view-order-btn" data-id="${deliveryId}">
+                        <i class="fas fa-eye"></i> View
+                    </button>
+                </td>
+            `;
+
+            row.querySelector('.view-order-btn').addEventListener('click', () => 
+                showDeliveryDetails(delivery, deliveryId));
+            deliveriesTableBody.appendChild(row);
+        }
+
+        function getOrderStatusBadge(status) {
+            switch(status) {
+                case 'ready':
+                    return '<span class="order-status-badge status-ready">Ready for Pickup</span>';
+                case 'out-for-delivery':
+                    return '<span class="order-status-badge status-out-for-delivery">On the Way</span>';
+                case 'delivered':
+                    return '<span class="order-status-badge status-delivered">Delivered</span>';
+                case 'failed':
+                    return '<span class="order-status-badge status-failed">Delivery Failed</span>';
+                default:
+                    return `<span class="badge bg-light text-dark">${status}</span>`;
+            }
+        }
+
+        function showDeliveryDetails(delivery, deliveryId) {
+            currentOrderId = deliveryId;
+            
+            const deliveryDate = delivery.deliveryDate?.toDate() || delivery.createdAt.toDate();
+            const formattedDate = deliveryDate.toLocaleString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            document.getElementById('deliveryModalTitle').textContent = `Order #${deliveryId.substring(0, 8)} Details`;
+            document.getElementById('deliveryDetails').innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Customer Information</h6>
+                        <p><strong>Name:</strong> ${delivery.customerName || delivery.customerEmail || 'Customer'}</p>
+                        <p><strong>Phone:</strong> ${delivery.customerPhone || 'Not provided'}</p>
+                        <p><strong>Delivery Date:</strong> ${formattedDate}</p>
+                        <p><strong>Address:</strong> ${delivery.deliveryAddress || "Store Pickup"}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Order Details</h6>
+                        <div class="card p-3">
+                            ${delivery.items?.map(item => `
+                                <div><strong>${item.size} ${item.type}</strong></div>
+                                <div>Flavor: ${item.flavor}</div>
+                                <div>Frosting: ${item.frosting}</div>
+                                <div>Toppings: ${item.toppings?.join(', ') || 'None'}</div>
+                                <div class="mt-2">Special Requests: ${item.specialRequests || 'None'}</div>
+                            `).join('') || '<div>Cake Order</div>'}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            setupStatusActions(delivery);
+            new bootstrap.Modal(document.getElementById('deliveryModal')).show();
+        }
+
+        function setupStatusActions(delivery) {
+            const statusActions = document.getElementById('statusActions');
+            statusActions.innerHTML = '';
+            
+            const status = delivery.status || 'ready';
+            
+            if (status === 'ready') {
+                statusActions.innerHTML = `
+                    <button class="btn btn-success status-btn" id="startDeliveryBtn">
+                        <i class="fas fa-motorcycle me-1"></i> Pick Up Order
+                    </button>
+                `;
+                document.getElementById('startDeliveryBtn').addEventListener('click', () => 
+                    updateDeliveryStatus(currentOrderId, 'out-for-delivery'));
+            } else if (status === 'out-for-delivery') {
+                statusActions.innerHTML = `
+                    <button class="btn btn-primary status-btn" id="completeDeliveryBtn">
+                        <i class="fas fa-check-circle me-1"></i> Mark as Delivered
+                    </button>
+                    <button class="btn btn-danger status-btn" id="failDeliveryBtn">
+                        <i class="fas fa-times-circle me-1"></i> Delivery Failed
+                    </button>
+                `;
+                document.getElementById('completeDeliveryBtn').addEventListener('click', showProofModal);
+                document.getElementById('failDeliveryBtn').addEventListener('click', () => 
+                    updateDeliveryStatus(currentOrderId, 'failed'));
+            }
+        }
+
+        function updateDeliveryStatus(deliveryId, newStatus, proofUrl = null, notes = null) {
+            const actionBtn = document.getElementById(`${newStatus.split('-')[0]}Btn`);
+            
+            if (actionBtn) {
+                actionBtn.disabled = true;
+                actionBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...`;
+            }
+            
+            const updateData = {
+                status: newStatus,
+                statusUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            if (newStatus === 'out-for-delivery') {
+                updateData.pickedUpAt = firebase.firestore.FieldValue.serverTimestamp();
+            } else if (newStatus === 'delivered') {
+                updateData.deliveredAt = firebase.firestore.FieldValue.serverTimestamp();
+            }
+            if (proofUrl) updateData.deliveryProof = proofUrl;
+            if (notes) updateData.deliveryNotes = notes;
+            
+            db.collection('orders').doc(deliveryId).update(updateData)
+            .then(() => {
+                const deliveryModal = bootstrap.Modal.getInstance(document.getElementById('deliveryModal'));
+                const proofModal = bootstrap.Modal.getInstance(document.getElementById('proofModal'));
+                if (deliveryModal) deliveryModal.hide();
+                if (proofModal) proofModal.hide();
+                loadDeliveries();
+                calculateDashboardStats();
+            })
+            .catch(error => {
+                console.error("Failed to update status:", error);
+                alert("Failed to update order status. Please try again.");
+                if (actionBtn) {
+                    actionBtn.disabled = false;
+                    actionBtn.innerHTML = `<i class="fas fa-exclamation-triangle me-1"></i> Try Again`;
+                }
+            });
+        }
+
+        function calculateDashboardStats() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            db.collection('orders')
+                .where('riderId', '==', currentRider.riderId)
+                .where('status', '==', 'delivered')
+                .where('deliveredAt', '>=', today)
+                .get()
+                .then(querySnapshot => {
+                    completedCount.textContent = querySnapshot.size;
+                    earningsCount.textContent = `$${(querySnapshot.size * 5).toFixed(2)}`;
+                })
+                .catch(error => console.error("Error loading completed deliveries:", error));
+        }
+
+        function setupEventListeners() {
+            toggleStatusBtn.addEventListener('click', toggleRiderStatus);
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                auth.signOut().then(() => window.location.href = 'login.html');
+            });
+            refreshDeliveriesBtn.addEventListener('click', () => {
+                loadDeliveries();
+                calculateDashboardStats();
+            });
+            proofUpload.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    proofFile = file;
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        proofImagePreview.src = event.target.result;
+                        proofImagePreview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            submitProofBtn.addEventListener('click', uploadProof);
+        }
+
+        // Helper functions
+        function updateRiderStatusUI() {
+            if (currentRider.status === "online") {
+                riderStatusIndicator.innerHTML = `
+                    <span class="rider-status-indicator rider-status-online"></span>
+                    <span class="rider-status-badge rider-online">Online</span>
+                `;
+                toggleStatusBtn.innerHTML = '<i class="fas fa-toggle-on me-1"></i> Go Offline';
+                toggleStatusBtn.className = 'btn btn-outline-danger';
+            } else {
+                riderStatusIndicator.innerHTML = `
+                    <span class="rider-status-indicator rider-status-offline"></span>
+                    <span class="rider-status-badge rider-offline">Offline</span>
+                `;
+                toggleStatusBtn.innerHTML = '<i class="fas fa-toggle-off me-1"></i> Go Online';
+                toggleStatusBtn.className = 'btn btn-outline-success';
+            }
+        }
+
+        function toggleRiderStatus() {
+            const newStatus = currentRider.status === "online" ? "offline" : "online";
+            
+            db.collection('users').doc(currentRider.id).update({
+                riderStatus: newStatus,
+                lastStatusChange: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .then(() => {
+                currentRider.status = newStatus;
+                updateRiderStatusUI();
+                
+                if (newStatus === "offline") {
+                    showNoDeliveriesMessage("You are currently offline. Switch to online mode to receive deliveries.");
+                } else {
+                    loadDeliveries();
+                }
+            })
+            .catch(error => {
+                console.error("Failed to update status:", error);
+                alert("Failed to update rider status. Please try again.");
+            });
+        }
+
+        function showProofModal() {
+            proofUpload.value = '';
+            proofImagePreview.src = '';
+            proofImagePreview.style.display = 'none';
+            new bootstrap.Modal(document.getElementById('proofModal')).show();
+        }
+
+        function uploadProof() {
+            if (!proofFile) {
+                alert("Please upload a photo first");
+                return;
+            }
+
+            submitProofBtn.disabled = true;
+            submitProofBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Uploading...`;
+
+            const storageRef = storage.ref();
+            const proofRef = storageRef.child(`delivery-proofs/${currentOrderId}/${Date.now()}_${proofFile.name}`);
+            
+            proofRef.put(proofFile).then(snapshot => snapshot.ref.getDownloadURL())
+            .then(downloadURL => {
+                const notes = document.getElementById('deliveryNotes').value;
+                updateDeliveryStatus(currentOrderId, 'delivered', downloadURL, notes);
+            })
+            .catch(error => {
+                console.error("Error uploading proof:", error);
+                alert("Failed to upload proof. Please try again.");
+                submitProofBtn.disabled = false;
+                submitProofBtn.innerHTML = `Submit Proof`;
+            });
+        }
+    </script>
+</body>
+</html>
