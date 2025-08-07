@@ -14,9 +14,16 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
+        // AI Configuration - Using Stable Diffusion API
+        const API_KEY = "fa47c5c6-385a-4adc-bec3-334a76e906a0"; // Your DeepAI API key
+        const ENDPOINT = "https://api.deepai.org/api/text2img"; // DeepAI text-to-image endpoint
+
         // DOM elements
         const logoutBtn = document.getElementById('logoutBtn');
         const orderModal = $('#orderModal');
+        const sidebarToggle = document.querySelector('.sidebar-toggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const sidebar = document.querySelector('.sidebar');
         
         // Count elements
         const totalOrdersEl = document.getElementById('totalOrders');
@@ -26,6 +33,80 @@
         
         // Order list
         const ordersList = document.getElementById('ordersList');
+
+        // AI/Gallery elements
+        const chatBox = document.getElementById('chat');
+        const galleryBox = document.getElementById('gallery');
+        const promptInput = document.getElementById('promptInput');
+        const searchInput = document.getElementById('searchInput');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        let galleryItems = [];  // Store gallery items
+        let currentFilter = 'all';
+        let currentSearch = '';
+
+        // Mobile sidebar toggle
+        sidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+        });
+        
+        sidebarOverlay.addEventListener('click', function() {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+        });
+
+        // Tab switching
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Update active nav item
+                document.querySelectorAll('.nav-item').forEach(nav => {
+                    nav.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // Hide all containers
+                document.querySelectorAll('.ai-gallery-container, #orders-tab').forEach(container => {
+                    container.style.display = 'none';
+                });
+                
+                // Show selected container
+                const target = this.getAttribute('data-target');
+                document.getElementById(target).style.display = 'block';
+                
+                // Special handling for gallery
+                if (target === 'gallery-tab') {
+                    updateGalleryView();
+                }
+                
+                // Close sidebar on mobile after selection
+                if (window.innerWidth < 992) {
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                }
+            });
+        });
+
+        // Filter button click handler
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class from all buttons
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                // Add active class to clicked button
+                this.classList.add('active');
+                // Set current filter
+                currentFilter = this.getAttribute('data-filter');
+                // Update gallery view
+                updateGalleryView();
+            });
+        });
+
+        // Search input handler
+        searchInput.addEventListener('input', function() {
+            currentSearch = this.value.toLowerCase();
+            updateGalleryView();
+        });
 
         // Check authentication state
         auth.onAuthStateChanged((user) => {
@@ -179,11 +260,11 @@
                                 </div>
                                 
                                 <div class="d-flex justify-content-between text-center mt-1">
-                                    <small class="text-muted">Processing</small>
-                                    <small class="text-muted">Done</small>
-                                    <small class="text-muted">To Deliver</small>
-                                    <small class="text-muted">On the Way</small>
-                                    <small class="text-muted">Delivered</small>
+                                    <small class="${order.status === 'processing' ? 'font-weight-bold text-success' : ''}">Processing</small>
+                                    <small class="${order.status === 'done' ? 'font-weight-bold text-success' : ''}">Done</small>
+                                    <small class="${order.status === 'to-deliver' ? 'font-weight-bold text-success' : ''}">To Deliver</small>
+                                    <small class="${order.status === 'on-the-way' ? 'font-weight-bold text-success' : ''}">On the Way</small>
+                                    <small class="${order.status === 'delivered' ? 'font-weight-bold text-success' : ''}">Delivered</small>
                                 </div>
                             </div>
                             
@@ -400,4 +481,414 @@
             auth.signOut().then(() => {
                 window.location.href = 'login.html';
             });
+        });
+
+        // AI Cake Designer Functions
+        async function sendPrompt() {
+            const prompt = promptInput.value.trim();
+            if (!prompt) {
+                appendMsg("Please enter a cake description", true);
+                return;
+            }
+            
+            // Extract tags from the prompt
+            const tags = extractTags(prompt);
+            
+            // Enhance the prompt to ensure realistic cake images
+            const enhancedPrompt = `${prompt}, professional cake photography, high detail, realistic fondant cake, studio lighting, high resolution, food photography, no cartoon style`;
+            
+            promptInput.value = "";
+            appendMsg(prompt, false); // user bubble
+            const thinking = appendMsg("Designing your cake... 🎂", true); // AI placeholder
+
+            try {
+                // Show loading state
+                thinking.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Baking your cake design...';
+
+                // Create form data
+                const formData = new FormData();
+                formData.append('text', enhancedPrompt);
+                
+                // Make API request
+                const response = await fetch(ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'api-key': API_KEY
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API request failed with status ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (!data.output_url) {
+                    throw new Error("No image URL returned from API");
+                }
+
+                // Display the generated image
+                thinking.innerHTML = `
+                    <img src="${data.output_url}" alt="AI cake design" style="max-width:100%; border-radius:8px;">
+                    <div class="mt-3">
+                        <p>Here's your realistic cake design! Would you like to:</p>
+                        <button class="btn btn-sm btn-outline-primary mr-2" onclick="saveDesign('${data.output_url}', '${prompt.replace(/'/g, "\\'")}', '${JSON.stringify(tags).replace(/'/g, "\\'")}')">
+                            <i class="fas fa-save"></i> Save to Gallery
+                        </button>
+                        <button class="btn btn-sm btn-outline-success" onclick="orderThisDesign('${data.output_url}', '${prompt.replace(/'/g, "\\'")}')">
+                            <i class="fas fa-shopping-cart"></i> Order This Cake
+                        </button>
+                    </div>
+                `;
+                
+                // Add to gallery
+                addToGallery(data.output_url, prompt, tags);
+            } catch (error) {
+                console.error("AI Design Error:", error);
+                thinking.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        Couldn't generate design: ${error.message || "Unknown error"}
+                        <p class="mt-2 mb-0 small">Please try again with a more detailed description or contact support.</p>
+                    </div>
+                `;
+            } finally {
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        }
+
+        // Extract tags from prompt text
+        function extractTags(prompt) {
+            const promptLower = prompt.toLowerCase();
+            const tags = [];
+            
+            // Check for common cake types
+            if (promptLower.includes('wedding')) tags.push('wedding');
+            if (promptLower.includes('birthday')) tags.push('birthday');
+            if (promptLower.includes('anniversary')) tags.push('anniversary');
+            
+            // Check for styles
+            if (promptLower.includes('cartoon')) tags.push('cartoon');
+            if (promptLower.includes('minimalist') || promptLower.includes('simple')) tags.push('minimalist');
+            if (promptLower.includes('floral') || promptLower.includes('flowers')) tags.push('floral');
+            if (promptLower.includes('geometric')) tags.push('geometric');
+            
+            // Check for adult content
+            if (promptLower.includes('adult') || promptLower.includes('bachelor') || 
+                promptLower.includes('bachelorette') || promptLower.includes('18+')) {
+                tags.push('adult');
+            }
+            
+            // Check for dessert types
+            if (promptLower.includes('chocolate') || promptLower.includes('vanilla') || 
+                promptLower.includes('strawberry') || promptLower.includes('fruit')) {
+                tags.push('dessert');
+            }
+            
+            // Ensure we always have at least one tag
+            if (tags.length === 0) {
+                tags.push('custom');
+            }
+            
+            return tags;
+        }
+
+        function useExample(prompt, tags) {
+            promptInput.value = prompt;
+            promptInput.focus();
+        }
+
+        function orderThisDesign(imageUrl, prompt) {
+            alert(`This would normally redirect to the order page with:\n\nDesign: ${imageUrl}\nDescription: ${prompt}`);
+            // In a real app, you would redirect to the order page with the design details
+            // window.location.href = `order.html?design=${encodeURIComponent(imageUrl)}&desc=${encodeURIComponent(prompt)}`;
+        }
+
+        function appendMsg(txt, isAI) {
+            const div = document.createElement('div');
+            div.className = 'msg' + (isAI ? ' ai' : '');
+            div.innerHTML = txt;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            return div;
+        }
+
+        // Gallery Functions
+        function addToGallery(imageUrl, prompt, tags = []) {
+            // If tags is a string (from localStorage), parse it
+            if (typeof tags === 'string') {
+                try {
+                    tags = JSON.parse(tags);
+                } catch {
+                    tags = extractTags(prompt);
+                }
+            }
+            
+            galleryItems.unshift({
+                url: imageUrl,
+                prompt: prompt,
+                tags: tags,
+                date: new Date()
+            });
+            
+            // Update gallery view if we're currently on the gallery tab
+            if (document.querySelector('.nav-item[data-target="gallery-tab"]').classList.contains('active')) {
+                updateGalleryView();
+            }
+            
+            // Save to local storage
+            saveGalleryToStorage();
+        }
+
+        function updateGalleryView() {
+            if (galleryItems.length === 0) {
+                galleryBox.innerHTML = `
+                    <div class="col-12 text-center">
+                        <div class="empty-state">
+                            <i class="fas fa-images"></i>
+                            <h4>No designs yet</h4>
+                            <p>Your generated cake designs will appear here</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            let galleryHTML = '';
+            let hasVisibleItems = false;
+            
+            galleryItems.forEach((item, index) => {
+                // Apply filters
+                if (currentFilter !== 'all' && !item.tags.includes(currentFilter)) {
+                    return;
+                }
+                
+                // Apply search
+                if (currentSearch && 
+                    !item.prompt.toLowerCase().includes(currentSearch) && 
+                    !item.tags.some(tag => tag.toLowerCase().includes(currentSearch))) {
+                    return;
+                }
+                
+                hasVisibleItems = true;
+                
+                // Render the gallery item
+                const tagsHtml = item.tags.map(tag => 
+                    `<span class="tag">${tag}</span>`
+                ).join('');
+                
+                galleryHTML += `
+                    <div class="col-md-4 col-sm-6 mb-4">
+                        <div class="gallery-item">
+                            <img src="${item.url}" alt="${item.prompt}" class="img-fluid" 
+                                 onclick="viewImage('${item.url}', '${item.prompt.replace(/'/g, "\\'")}', '${JSON.stringify(item.tags).replace(/'/g, "\\'")}')">
+                            <div class="prompt-text">${item.prompt}</div>
+                            <div class="tags">${tagsHtml}</div>
+                            <small class="text-muted">${item.date.toLocaleDateString()}</small>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            if (!hasVisibleItems) {
+                galleryHTML = `
+                    <div class="col-12 text-center">
+                        <div class="empty-state">
+                            <i class="fas fa-search"></i>
+                            <h4>No matching designs</h4>
+                            <p>Try changing your search or filter criteria</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            galleryBox.innerHTML = galleryHTML;
+        }
+
+        function viewImage(src, prompt, tags) {
+            // Parse tags if they're a string
+            if (typeof tags === 'string') {
+                try {
+                    tags = JSON.parse(tags);
+                } catch {
+                    tags = extractTags(prompt);
+                }
+            }
+            
+            const tagsHtml = tags.map(tag => 
+                `<span class="tag">${tag}</span>`
+            ).join('');
+            
+            const modalHtml = `
+                <div class="modal fade" id="imageModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">${prompt}</h5>
+                                <button type="button" class="close" data-dismiss="modal">
+                                    <span>&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="text-center">
+                                    <img src="${src}" class="img-fluid mb-3" alt="${prompt}">
+                                </div>
+                                <div class="tags mb-3">${tagsHtml}</div>
+                                <p>${prompt}</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary" onclick="saveDesign('${src}', '${prompt.replace(/'/g, "\\'")}', '${JSON.stringify(tags).replace(/'/g, "\\'")}')">
+                                    <i class="fas fa-save"></i> Save Design
+                                </button>
+                                <button type="button" class="btn btn-success" onclick="orderThisDesign('${src}', '${prompt.replace(/'/g, "\\'")}')">
+                                    <i class="fas fa-shopping-cart"></i> Order This Cake
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Inject modal into DOM
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            $('#imageModal').modal('show');
+            
+            // Remove modal after it's closed
+            $('#imageModal').on('hidden.bs.modal', function () {
+                $(this).remove();
+            });
+        }
+
+        function saveDesign(imageUrl, prompt, tags) {
+            // Here you would typically save to your database
+            // For now we'll just show a confirmation
+            alert(`Design saved to your gallery!\n\nPrompt: ${prompt}`);
+            $('#imageModal').modal('hide');
+            
+            // Add to gallery if not already there
+            const exists = galleryItems.some(item => item.url === imageUrl);
+            if (!exists) {
+                addToGallery(imageUrl, prompt, tags);
+            }
+        }
+
+        // Local storage functions for gallery
+        function saveGalleryToStorage() {
+            localStorage.setItem('cakeDesigns', JSON.stringify(galleryItems));
+        }
+
+        function loadGalleryFromStorage() {
+            const saved = localStorage.getItem('cakeDesigns');
+            if (saved) {
+                galleryItems = JSON.parse(saved);
+                // Convert string dates back to Date objects
+                galleryItems.forEach(item => {
+                    item.date = new Date(item.date);
+                    // Ensure tags exist
+                    if (!item.tags) {
+                        item.tags = extractTags(item.prompt);
+                    }
+                });
+            }
+        }
+
+        // Password functions
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = input.nextElementSibling;
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                input.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
+        }
+
+        // Handle password change form submission
+        document.getElementById('passwordChangeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const alertDiv = document.getElementById('passwordAlert');
+            
+            // Reset alert
+            alertDiv.style.display = 'none';
+            alertDiv.className = 'alert mt-3';
+            
+            // Validate passwords match
+            if (newPassword !== confirmPassword) {
+                showAlert('New passwords do not match', 'danger');
+                return;
+            }
+            
+            // Validate password length
+            if (newPassword.length < 6) {
+                showAlert('Password must be at least 6 characters', 'danger');
+                return;
+            }
+            
+            // Get current user
+            const user = auth.currentUser;
+            const credential = firebase.auth.EmailAuthProvider.credential(
+                user.email, 
+                currentPassword
+            );
+            
+            // Reauthenticate user
+            user.reauthenticateWithCredential(credential)
+                .then(() => {
+                    // Change password
+                    return user.updatePassword(newPassword);
+                })
+                .then(() => {
+                    showAlert('Password changed successfully!', 'success');
+                    document.getElementById('passwordChangeForm').reset();
+                })
+                .catch(error => {
+                    console.error('Error changing password:', error);
+                    let message = 'Error changing password';
+                    if (error.code === 'auth/wrong-password') {
+                        message = 'Current password is incorrect';
+                    } else if (error.code === 'auth/weak-password') {
+                        message = 'Password is too weak';
+                    }
+                    showAlert(message, 'danger');
+                });
+        });
+        
+        function showAlert(message, type) {
+            const alertDiv = document.getElementById('passwordAlert');
+            alertDiv.textContent = message;
+            alertDiv.classList.add(`alert-${type}`);
+            alertDiv.style.display = 'block';
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show orders tab by default
+            document.getElementById('orders-tab').style.display = 'block';
+            
+            // Load gallery from local storage
+            loadGalleryFromStorage();
+            
+            // Set up prompt input to send on Enter key (but allow Shift+Enter for new lines)
+            promptInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendPrompt();
+                }
+            });
+            
+            // Initialize mobile header if needed
+            if (window.innerWidth < 992) {
+                document.querySelector('.mobile-header').style.display = 'flex';
+                document.querySelector('.sidebar-toggle').style.display = 'block';
+            }
         });
